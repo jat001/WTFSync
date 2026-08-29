@@ -1,18 +1,42 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, ref, type Component } from 'vue'
 
-const route = useRoute()
+import About from './About.vue'
+import WatchPathsModal from './components/WatchPathsModal.vue'
+import Home from './Home.vue'
+import Setting from './Setting.vue'
+import { useModal } from './ui/modal'
+
+type PageKey = 'home' | 'setting' | 'about'
+
+const pages: Record<PageKey, Component> = {
+  home: Home,
+  setting: Setting,
+  about: About,
+}
+const current = ref<PageKey>('home')
 const syncing = ref(true)
 
+const { currentModal, closeModal } = useModal()
+const modalOpen = computed({
+  get: () => currentModal.value !== null,
+  set: (v: boolean) => {
+    if (!v) closeModal()
+  },
+})
+
 const navItems = [
-  { label: '工作台', icon: 'i-lucide-layout-dashboard', to: '/' },
-  { label: '设置', icon: 'i-lucide-settings-2', to: '/setting' },
-  { label: '关于', icon: 'i-lucide-circle-help', to: '/about' },
+  {
+    key: 'home' as PageKey,
+    label: '工作台',
+    icon: 'i-lucide-layout-dashboard',
+  },
+  { key: 'setting' as PageKey, label: '设置', icon: 'i-lucide-settings-2' },
+  { key: 'about' as PageKey, label: '关于', icon: 'i-lucide-circle-help' },
 ]
 
-function isActive(to: string) {
-  return route.path === to
+function isActive(key: PageKey) {
+  return current.value === key
 }
 </script>
 
@@ -50,14 +74,14 @@ function isActive(to: string) {
             <div class="space-y-0.5">
               <UButton
                 v-for="item in navItems"
-                :key="item.to"
-                :to="item.to"
+                :key="item.key"
                 :label="item.label"
                 :icon="item.icon"
                 size="sm"
-                :color="isActive(item.to) ? 'primary' : 'neutral'"
-                :variant="isActive(item.to) ? 'soft' : 'ghost'"
+                :color="isActive(item.key) ? 'primary' : 'neutral'"
+                :variant="isActive(item.key) ? 'soft' : 'ghost'"
                 class="w-full justify-start"
+                @click="current = item.key"
               />
             </div>
           </nav>
@@ -103,7 +127,7 @@ function isActive(to: string) {
 
         <!-- 内容区 -->
         <main class="min-h-0 min-w-0 flex-1 overflow-y-auto bg-default">
-          <RouterView />
+          <component :is="pages[current]" />
         </main>
       </div>
 
@@ -130,5 +154,12 @@ function isActive(to: string) {
         <UBadge color="success" variant="subtle" size="sm">运行正常</UBadge>
       </footer>
     </div>
+
+    <!-- 全局弹窗 -->
+    <UModal v-model:open="modalOpen" title="示例配置">
+      <template #body>
+        <WatchPathsModal v-if="currentModal === 'watch-paths'" />
+      </template>
+    </UModal>
   </UApp>
 </template>

@@ -19,7 +19,7 @@ function checkUpdate() {
 function openLogs() {
   toast.add({
     title: '日志目录',
-    description: '%APPDATA%\\WTFSync\\logs',
+    description: '%APPDATA%/WTFSync/logs',
     icon: 'i-lucide-folder-open',
     color: 'neutral',
   })

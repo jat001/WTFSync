@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useModal } from './ui/modal'
 
 const toast = useToast()
+const { openModal } = useModal()
 
 const query = ref('')
 const active = ref('general')
@@ -163,6 +165,22 @@ function rebuildIndex() {
 
       <!-- 同步 -->
       <div v-else-if="active === 'sync'" class="divide-y divide-default">
+        <div class="flex items-center justify-between gap-6 px-5 py-4">
+          <div>
+            <p class="text-sm font-medium text-highlighted">监视目录</p>
+            <p class="mt-0.5 text-xs text-muted">
+              目录内文件变更将触发同步，点击管理详细编辑
+            </p>
+          </div>
+          <UButton
+            label="管理"
+            icon="i-lucide-folder-cog"
+            color="neutral"
+            variant="outline"
+            size="xs"
+            @click="openModal('watch-paths')"
+          />
+        </div>
         <div class="flex items-center justify-between gap-6 px-5 py-4">
           <div>
             <p class="text-sm font-medium text-highlighted">检查频率</p>
