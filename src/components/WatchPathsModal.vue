@@ -1,11 +1,14 @@
 <script setup lang="ts">
+import { open } from '@tauri-apps/plugin-dialog'
 import { ref } from 'vue'
+
+import { isTauri } from '../lib/tauri'
 import { useModal } from '../ui/modal'
 
 const { closeModal } = useModal()
 const toast = useToast()
 
-// 示例配置：监视目录列表（array[str]）
+// Mock config: watched directories (array[str])
 const paths = ref<string[]>(['D:/Documents', 'D:/Work'])
 const draft = ref('')
 
@@ -18,6 +21,20 @@ function addPath() {
 
 function removePath(p: string) {
   paths.value = paths.value.filter((x) => x !== p)
+}
+
+async function browse() {
+  if (!isTauri) {
+    toast.add({
+      title: '浏览器预览中不可用',
+      description: '请在桌面应用中选择文件夹',
+      icon: 'i-lucide-info',
+      color: 'warning',
+    })
+    return
+  }
+  const selected = await open({ directory: true, title: '选择监视目录' })
+  if (typeof selected === 'string') draft.value = selected
 }
 
 function save() {
@@ -36,7 +53,7 @@ function save() {
     <p class="text-sm font-medium text-highlighted">监视目录</p>
     <p class="mt-0.5 text-xs text-muted">这些目录内的文件变更会触发同步</p>
 
-    <ul class="mt-4 space-y-2">
+    <ul v-if="paths.length" class="mt-4 space-y-2">
       <li
         v-for="p in paths"
         :key="p"
@@ -53,6 +70,14 @@ function save() {
         />
       </li>
     </ul>
+    <UEmpty
+      v-else
+      icon="i-lucide-folder-x"
+      title="暂无监视目录"
+      description="添加一个目录以开始同步"
+      size="sm"
+      class="mt-4"
+    />
 
     <div class="mt-3 flex gap-2">
       <UInput
@@ -61,8 +86,25 @@ function save() {
         size="sm"
         class="select-text"
         @keydown.enter="addPath"
+      >
+        <template #trailing>
+          <UButton
+            icon="i-lucide-folder-open"
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            aria-label="浏览文件夹"
+            @click="browse"
+          />
+        </template>
+      </UInput>
+      <UButton
+        label="添加"
+        icon="i-lucide-plus"
+        size="sm"
+        :disabled="!draft.trim()"
+        @click="addPath"
       />
-      <UButton label="添加" icon="i-lucide-plus" size="sm" @click="addPath" />
     </div>
 
     <div class="mt-4 flex justify-end gap-2">

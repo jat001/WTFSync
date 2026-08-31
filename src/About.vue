@@ -1,5 +1,11 @@
 <script setup lang="ts">
+import pkg from '../package.json'
+import AppLogo from './components/AppLogo.vue'
+import { openLogDir } from './lib/logs'
+import { isTauri } from './lib/tauri'
+
 const toast = useToast()
+const version = pkg.version
 
 const infoRows = [
   { label: '构建日期', value: '2026-08-28' },
@@ -10,34 +16,41 @@ const infoRows = [
 function checkUpdate() {
   toast.add({
     title: '已是最新版本',
-    description: '版本 0.1.0 已通过更新检查',
+    description: `版本 ${version} 已通过更新检查`,
     icon: 'i-lucide-circle-check',
     color: 'success',
   })
 }
 
-function openLogs() {
-  toast.add({
-    title: '日志目录',
-    description: '%APPDATA%/WTFSync/logs',
-    icon: 'i-lucide-folder-open',
-    color: 'neutral',
-  })
+async function openLogs() {
+  try {
+    const dir = await openLogDir()
+    toast.add({
+      title: isTauri ? '已打开日志目录' : '日志目录',
+      description: dir,
+      icon: 'i-lucide-folder-open',
+      color: 'neutral',
+    })
+  } catch {
+    toast.add({
+      title: '无法打开日志目录',
+      description: '目录可能尚未创建',
+      icon: 'i-lucide-circle-alert',
+      color: 'error',
+    })
+  }
 }
 </script>
 
 <template>
   <div class="flex min-h-full items-center justify-center bg-muted/50 p-6">
     <UCard class="w-full max-w-md" :ui="{ body: 'p-0' }">
-      <!-- 应用信息 -->
+      <!-- App info -->
       <div class="flex flex-col items-center px-10 pb-5 pt-8 text-center">
-        <span
-          class="flex size-14 items-center justify-center rounded-xl bg-primary text-2xl font-bold text-inverted"
-          >W</span
-        >
+        <AppLogo size="lg" />
         <h1 class="mt-4 text-lg font-semibold text-highlighted">WTFSync</h1>
         <UBadge color="neutral" variant="subtle" size="sm" class="mt-1.5">
-          版本 0.1.0
+          版本 {{ version }}
         </UBadge>
         <p class="mt-3 text-sm text-muted">简单，可靠，始终同步。</p>
       </div>
@@ -51,7 +64,7 @@ function openLogs() {
         class="mx-6"
       />
 
-      <!-- 信息列表 -->
+      <!-- Info list -->
       <dl class="mx-6 my-5 divide-y divide-default">
         <div
           v-for="row in infoRows"
@@ -63,7 +76,7 @@ function openLogs() {
         </div>
       </dl>
 
-      <!-- 操作 -->
+      <!-- Actions -->
       <div class="flex justify-center gap-2 border-t border-default px-6 py-5">
         <UButton
           label="检查更新"
@@ -83,7 +96,7 @@ function openLogs() {
         />
       </div>
 
-      <!-- 快捷键提示 -->
+      <!-- Keyboard shortcuts -->
       <div
         class="flex flex-wrap items-center justify-center gap-1.5 px-6 pb-6 text-[11px] text-dimmed"
       >
@@ -92,6 +105,11 @@ function openLogs() {
         <span>+</span>
         <UKbd size="sm">,</UKbd>
         <span>打开设置</span>
+        <span class="mx-1">·</span>
+        <UKbd size="sm">Ctrl</UKbd>
+        <span>+</span>
+        <UKbd size="sm">1~3</UKbd>
+        <span>切换页面</span>
       </div>
     </UCard>
   </div>

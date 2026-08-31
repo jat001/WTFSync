@@ -1,8 +1,13 @@
 <script setup lang="ts">
-import { computed, ref, type Component } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, type Component } from 'vue'
 
+import pkg from '../package.json'
 import About from './About.vue'
+import AppLogo from './components/AppLogo.vue'
 import WatchPathsModal from './components/WatchPathsModal.vue'
+import { useSyncState } from './composables/useSyncState'
+import { useTheme } from './composables/useTheme'
+import type { ThemeMode } from './composables/useSettings'
 import Home from './Home.vue'
 import Setting from './Setting.vue'
 import { useModal } from './ui/modal'
@@ -15,7 +20,18 @@ const pages: Record<PageKey, Component> = {
   about: About,
 }
 const current = ref<PageKey>('home')
-const syncing = ref(true)
+
+const { syncing, toggleSync, onlineDevices, storage, storagePercent } =
+  useSyncState()
+const { theme, cycleTheme } = useTheme()
+
+const themeMeta: Record<ThemeMode, { icon: string; label: string }> = {
+  light: { icon: 'i-lucide-sun', label: '浅色模式' },
+  dark: { icon: 'i-lucide-moon', label: '深色模式' },
+  system: { icon: 'i-lucide-monitor', label: '跟随系统' },
+}
+const themeIcon = computed(() => themeMeta[theme.value].icon)
+const themeLabel = computed(() => themeMeta[theme.value].label)
 
 const { currentModal, closeModal } = useModal()
 const modalOpen = computed({
@@ -35,6 +51,24 @@ const navItems = [
   { key: 'about' as PageKey, label: '关于', icon: 'i-lucide-circle-help' },
 ]
 
+const pageOrder: PageKey[] = ['home', 'setting', 'about']
+
+// Global shortcuts: Ctrl+, opens settings, Ctrl+1/2/3 switches pages.
+function onKeydown(event: KeyboardEvent) {
+  if (!event.ctrlKey || event.shiftKey || event.altKey) return
+  if (event.key === ',') {
+    current.value = 'setting'
+  } else {
+    const index = Number.parseInt(event.key, 10) - 1
+    if (index < 0 || index >= pageOrder.length) return
+    current.value = pageOrder[index] ?? 'home'
+  }
+  event.preventDefault()
+}
+
+onMounted(() => window.addEventListener('keydown', onKeydown))
+onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
+
 function isActive(key: PageKey) {
   return current.value === key
 }
@@ -46,17 +80,14 @@ function isActive(key: PageKey) {
       class="flex h-screen min-h-0 select-none flex-col overflow-hidden bg-default text-default"
     >
       <div class="flex min-h-0 min-w-0 flex-1">
-        <!-- 侧边导航 -->
+        <!-- Sidebar navigation -->
         <aside
           class="flex w-52 shrink-0 flex-col border-r border-default bg-muted"
         >
           <div
             class="flex items-center gap-2.5 border-b border-default px-4 py-3"
           >
-            <span
-              class="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-sm font-bold text-inverted"
-              >W</span
-            >
+            <AppLogo />
             <div class="min-w-0">
               <p class="truncate text-[13px] font-semibold text-highlighted">
                 WTFSync
@@ -89,12 +120,14 @@ function isActive(key: PageKey) {
           <div class="border-t border-default px-3 py-3">
             <div class="flex items-center justify-between text-xs">
               <span class="text-muted">同步空间</span>
-              <span class="font-medium tabular-nums text-highlighted">68%</span>
+              <span class="font-medium tabular-nums text-highlighted"
+                >{{ storagePercent }}%</span
+              >
             </div>
-            <UProgress :model-value="68" size="sm" class="mt-1.5" />
+            <UProgress :model-value="storagePercent" size="sm" class="mt-1.5" />
             <div class="mt-1.5 flex items-center justify-between">
               <span class="text-[11px] tabular-nums text-dimmed"
-                >6.8 / 10 GB</span
+                >{{ storage.used }} / {{ storage.total }} GB</span
               >
               <UTooltip :text="syncing ? '暂停同步' : '继续同步'">
                 <UButton
@@ -102,8 +135,8 @@ function isActive(key: PageKey) {
                   color="neutral"
                   variant="ghost"
                   size="xs"
-                  aria-label="暂停同步"
-                  @click="syncing = !syncing"
+                  :aria-label="syncing ? '暂停同步' : '继续同步'"
+                  @click="toggleSync"
                 />
               </UTooltip>
             </div>
@@ -119,19 +152,31 @@ function isActive(key: PageKey) {
             <span class="truncate text-[11px] text-muted">
               {{ syncing ? '已连接 · 同步中' : '同步已暂停' }}
             </span>
-            <span class="ml-auto shrink-0 text-[11px] tabular-nums text-dimmed"
-              >v0.1.0</span
-            >
+            <span class="ml-auto flex shrink-0 items-center gap-0.5">
+              <UTooltip :text="`主题：${themeLabel}`">
+                <UButton
+                  :icon="themeIcon"
+                  color="neutral"
+                  variant="ghost"
+                  size="xs"
+                  :aria-label="`切换主题，当前为${themeLabel}`"
+                  @click="cycleTheme"
+                />
+              </UTooltip>
+              <span class="px-1 text-[11px] tabular-nums text-dimmed"
+                >v{{ pkg.version }}</span
+              >
+            </span>
           </div>
         </aside>
 
-        <!-- 内容区 -->
+        <!-- Content area -->
         <main class="min-h-0 min-w-0 flex-1 overflow-y-auto bg-default">
           <component :is="pages[current]" />
         </main>
       </div>
 
-      <!-- 状态栏 -->
+      <!-- Status bar -->
       <footer
         class="flex h-7 shrink-0 items-center gap-2 border-t border-default bg-muted px-3 text-[11px] text-muted"
       >
@@ -144,10 +189,13 @@ function isActive(key: PageKey) {
         <span class="flex h-3 items-center">
           <USeparator orientation="vertical" />
         </span>
-        <span>3 台设备在线</span>
+        <span>{{ onlineDevices.length }} 台设备在线</span>
         <span class="flex-1" />
-        <span class="tabular-nums">↑ 1.2 MB/s</span>
-        <span class="tabular-nums">↓ 3.4 KB/s</span>
+        <template v-if="syncing">
+          <span class="tabular-nums">↑ 1.2 MB/s</span>
+          <span class="tabular-nums">↓ 3.4 KB/s</span>
+        </template>
+        <span v-else class="tabular-nums">传输已挂起</span>
         <span class="flex h-3 items-center">
           <USeparator orientation="vertical" />
         </span>
@@ -155,7 +203,7 @@ function isActive(key: PageKey) {
       </footer>
     </div>
 
-    <!-- 全局弹窗 -->
+    <!-- Global modal -->
     <UModal v-model:open="modalOpen" title="示例配置">
       <template #body>
         <WatchPathsModal v-if="currentModal === 'watch-paths'" />

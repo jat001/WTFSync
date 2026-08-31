@@ -1,80 +1,57 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { open } from '@tauri-apps/plugin-dialog'
+import { computed, ref } from 'vue'
+
+import {
+  useSyncState,
+  type Transfer,
+} from './composables/useSyncState'
+import { isTauri } from './lib/tauri'
 
 const toast = useToast()
 
-const syncing = ref(true)
+const {
+  syncing,
+  toggleSync,
+  devices,
+  onlineDevices,
+  transfers,
+  activeTransfers,
+  folders,
+  addFolder,
+  storage,
+} = useSyncState()
+
 const isFolderModalOpen = ref(false)
 const newFolderName = ref('')
 const newFolderPath = ref('')
 
-interface Transfer {
-  name: string
-  target: string
-  size: string
-  progress: number
-  speed: string
-  status: 'active' | 'queued' | 'done'
-}
-
-const transfers = ref<Transfer[]>([
+const stats = computed(() => [
   {
-    name: '设计资源 / 图标库.fig',
-    target: 'MacBook Pro',
-    size: '184.2 MB',
-    progress: 72,
-    speed: '3.2 MB/s',
-    status: 'active',
+    label: '待同步',
+    value: '12',
+    icon: 'i-lucide-clock-3',
+    hint: `${activeTransfers.value.length} 个文件传输中`,
   },
   {
-    name: '照片备份 / 2026-08',
-    target: 'NAS · 客厅',
-    size: '2.1 GB',
-    progress: 46,
-    speed: '5.8 MB/s',
-    status: 'active',
+    label: '已同步文件',
+    value: '1,284',
+    icon: 'i-lucide-file-check-2',
+    hint: '本周新增 56 个',
   },
   {
-    name: '项目文档 / 需求评审.pdf',
-    target: '这台电脑',
-    size: '12.6 MB',
-    progress: 100,
-    speed: '',
-    status: 'done',
+    label: '在线设备',
+    value: `${onlineDevices.value.length} / ${devices.value.length}`,
+    icon: 'i-lucide-monitor',
+    hint: '局域网直连',
   },
   {
-    name: '音乐 / 歌单导出.m3u8',
-    target: 'iPhone 15',
-    size: '8.4 KB',
-    progress: 0,
-    speed: '排队中',
-    status: 'queued',
+    label: '存储占用',
+    value: `${storage.used} GB`,
+    icon: 'i-lucide-hard-drive',
+    hint: `剩余 ${(storage.total - storage.used).toFixed(1)} GB`,
   },
 ])
-
-const devices = [
-  {
-    name: '这台电脑',
-    detail: 'ThinkPad X1',
-    initial: '本',
-    online: true,
-    time: '刚刚',
-  },
-  {
-    name: 'MacBook Pro',
-    detail: '设计资源 · 在线编辑',
-    initial: 'M',
-    online: true,
-    time: '12 分钟前',
-  },
-  {
-    name: 'NAS · 客厅',
-    detail: '照片备份',
-    initial: 'N',
-    online: false,
-    time: '3 天前',
-  },
-]
 
 const activity = [
   {
@@ -97,34 +74,13 @@ const activity = [
   },
 ]
 
-const folders = ref([
-  {
-    label: '项目文档',
-    icon: 'i-lucide-folder',
-    defaultExpanded: true,
-    children: [
-      { label: '需求评审.pdf', icon: 'i-lucide-file-text' },
-      { label: 'WTFSync 设计稿', icon: 'i-lucide-file-text' },
-    ],
-  },
-  {
-    label: '设计资源',
-    icon: 'i-lucide-folder',
-    defaultExpanded: true,
-    children: [{ label: '图标库.fig', icon: 'i-lucide-file-text' }],
-  },
-  {
-    label: '照片备份',
-    icon: 'i-lucide-folder',
-    children: [],
-  },
-])
-
-function toggleSync() {
-  syncing.value = !syncing.value
+function onToggleSync() {
+  toggleSync()
   toast.add({
     title: syncing.value ? '同步已恢复' : '同步已暂停',
-    description: syncing.value ? '继续处理 3 个传输任务' : '所有传输任务已挂起',
+    description: syncing.value
+      ? `继续处理 ${activeTransfers.value.length} 个传输任务`
+      : '所有传输任务已挂起',
     icon: syncing.value ? 'i-lucide-play' : 'i-lucide-pause',
     color: syncing.value ? 'success' : 'warning',
   })
@@ -133,22 +89,32 @@ function toggleSync() {
 function syncNow() {
   toast.add({
     title: '同步已开始',
-    description: '正在扫描 3 个同步目录…',
+    description: `正在扫描 ${folders.value.length} 个同步目录…`,
     icon: 'i-lucide-refresh-cw',
     color: 'primary',
   })
 }
 
-function addFolder() {
-  if (!newFolderName.value.trim()) return
-  folders.value.push({
-    label: newFolderName.value.trim(),
-    icon: 'i-lucide-folder',
-    defaultExpanded: true,
-    children: [],
-  })
+async function pickFolder() {
+  if (!isTauri) {
+    toast.add({
+      title: '浏览器预览中不可用',
+      description: '请在桌面应用中选择文件夹',
+      icon: 'i-lucide-info',
+      color: 'warning',
+    })
+    return
+  }
+  const selected = await open({ directory: true, title: '选择同步文件夹' })
+  if (typeof selected === 'string') newFolderPath.value = selected
+}
+
+function submitFolder() {
+  const label = newFolderName.value.trim()
+  if (!label) return
+  addFolder(label)
   toast.add({
-    title: `已添加「${newFolderName.value.trim()}」`,
+    title: `已添加「${label}」`,
     description: newFolderPath.value || '将开始首次索引',
     icon: 'i-lucide-folder-plus',
     color: 'success',
@@ -196,7 +162,7 @@ const transferMenu = (transfer: Transfer): TransferMenuItem[][] => [
 
 <template>
   <div class="space-y-4 p-4">
-    <!-- 工具栏 -->
+    <!-- Toolbar -->
     <div class="flex items-center justify-between gap-3">
       <div class="min-w-0">
         <h1 class="truncate text-base font-semibold text-highlighted">
@@ -211,7 +177,7 @@ const transferMenu = (transfer: Transfer): TransferMenuItem[][] => [
           color="neutral"
           variant="outline"
           size="sm"
-          @click="toggleSync"
+          @click="onToggleSync"
         />
         <UButton
           icon="i-lucide-refresh-cw"
@@ -223,61 +189,36 @@ const transferMenu = (transfer: Transfer): TransferMenuItem[][] => [
       </div>
     </div>
 
-    <!-- 统计 -->
+    <!-- Stats -->
     <div class="grid grid-cols-2 gap-3 xl:grid-cols-4">
-      <UCard variant="soft" class="ring-0">
+      <UCard
+        v-for="stat in stats"
+        :key="stat.label"
+        variant="soft"
+        class="ring-0"
+      >
         <div class="flex items-center justify-between">
-          <span class="text-xs text-muted">待同步</span>
-          <UIcon name="i-lucide-clock-3" class="size-4 text-dimmed" />
+          <span class="text-xs text-muted">{{ stat.label }}</span>
+          <UIcon :name="stat.icon" class="size-4 text-dimmed" />
         </div>
         <p class="mt-1.5 text-xl font-semibold tabular-nums text-highlighted">
-          12
+          {{ stat.value }}
         </p>
-        <p class="text-[11px] text-dimmed">3 个文件传输中</p>
-      </UCard>
-      <UCard variant="soft" class="ring-0">
-        <div class="flex items-center justify-between">
-          <span class="text-xs text-muted">已同步文件</span>
-          <UIcon name="i-lucide-file-check-2" class="size-4 text-dimmed" />
-        </div>
-        <p class="mt-1.5 text-xl font-semibold tabular-nums text-highlighted">
-          1,284
-        </p>
-        <p class="text-[11px] text-dimmed">本周新增 56 个</p>
-      </UCard>
-      <UCard variant="soft" class="ring-0">
-        <div class="flex items-center justify-between">
-          <span class="text-xs text-muted">在线设备</span>
-          <UIcon name="i-lucide-monitor" class="size-4 text-dimmed" />
-        </div>
-        <p class="mt-1.5 text-xl font-semibold tabular-nums text-highlighted">
-          2 / 3
-        </p>
-        <p class="text-[11px] text-dimmed">局域网直连</p>
-      </UCard>
-      <UCard variant="soft" class="ring-0">
-        <div class="flex items-center justify-between">
-          <span class="text-xs text-muted">存储占用</span>
-          <UIcon name="i-lucide-hard-drive" class="size-4 text-dimmed" />
-        </div>
-        <p class="mt-1.5 text-xl font-semibold tabular-nums text-highlighted">
-          6.8 GB
-        </p>
-        <p class="text-[11px] text-dimmed">剩余 3.2 GB</p>
+        <p class="text-[11px] text-dimmed">{{ stat.hint }}</p>
       </UCard>
     </div>
 
-    <!-- 主区域 -->
+    <!-- Main area -->
     <div class="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-      <!-- 左列 -->
+      <!-- Left column -->
       <div class="space-y-4">
-        <!-- 传输队列 -->
+        <!-- Transfer queue -->
         <UCard :ui="{ body: 'p-0' }">
           <div class="flex items-center justify-between gap-2 px-4 py-3">
             <div class="flex items-center gap-2">
               <h2 class="text-sm font-semibold text-highlighted">传输队列</h2>
               <UBadge color="primary" variant="subtle" size="sm"
-                >2 进行中</UBadge
+                >{{ activeTransfers.length }} 进行中</UBadge
               >
             </div>
             <UTooltip text="刷新队列">
@@ -358,7 +299,7 @@ const transferMenu = (transfer: Transfer): TransferMenuItem[][] => [
           </div>
         </UCard>
 
-        <!-- 同步目录 -->
+        <!-- Sync folders -->
         <UCard :ui="{ body: 'p-0' }">
           <div class="flex items-center justify-between gap-2 px-4 py-3">
             <h2 class="text-sm font-semibold text-highlighted">同步目录</h2>
@@ -379,13 +320,15 @@ const transferMenu = (transfer: Transfer): TransferMenuItem[][] => [
         </UCard>
       </div>
 
-      <!-- 右列 -->
+      <!-- Right column -->
       <div class="space-y-4">
-        <!-- 设备 -->
+        <!-- Devices -->
         <UCard :ui="{ body: 'p-0' }">
           <div class="flex items-center justify-between gap-2 px-4 py-3">
             <h2 class="text-sm font-semibold text-highlighted">设备</h2>
-            <UBadge color="success" variant="subtle" size="sm">2 台在线</UBadge>
+            <UBadge color="success" variant="subtle" size="sm"
+              >{{ onlineDevices.length }} 台在线</UBadge
+            >
           </div>
           <div class="divide-y divide-default">
             <div
@@ -430,7 +373,7 @@ const transferMenu = (transfer: Transfer): TransferMenuItem[][] => [
           </div>
         </UCard>
 
-        <!-- 最近活动 -->
+        <!-- Recent activity -->
         <UCard :ui="{ body: 'p-0' }">
           <div class="flex items-center justify-between gap-2 px-4 py-3">
             <h2 class="text-sm font-semibold text-highlighted">最近活动</h2>
@@ -443,7 +386,7 @@ const transferMenu = (transfer: Transfer): TransferMenuItem[][] => [
       </div>
     </div>
 
-    <!-- 添加目录对话框 -->
+    <!-- Add folder modal -->
     <UModal
       v-model:open="isFolderModalOpen"
       title="添加同步目录"
@@ -469,6 +412,7 @@ const transferMenu = (transfer: Transfer): TransferMenuItem[][] => [
                 variant="ghost"
                 size="xs"
                 aria-label="浏览文件夹"
+                @click="pickFolder"
               />
             </template>
           </UInput>
@@ -486,7 +430,8 @@ const transferMenu = (transfer: Transfer): TransferMenuItem[][] => [
           label="添加"
           icon="i-lucide-plus"
           size="sm"
-          @click="addFolder"
+          :disabled="!newFolderName.trim()"
+          @click="submitFolder"
         />
       </template>
     </UModal>

@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+
+import { useSettings } from './composables/useSettings'
+import { openLogDir } from './lib/logs'
+import { isTauri } from './lib/tauri'
 import { useModal } from './ui/modal'
 
 const toast = useToast()
 const { openModal } = useModal()
+const { settings, save, reset, revert } = useSettings()
 
 const query = ref('')
 const active = ref('general')
@@ -22,15 +27,13 @@ const visibleCategories = computed(() =>
   categories.filter((item) => item.label.includes(query.value.trim())),
 )
 
-// 通用
-const launchAtStartup = ref(true)
-const minimizeToTray = ref(true)
-const autoSync = ref(true)
+const themeOptions = [
+  { label: '跟随系统', value: 'system' },
+  { label: '浅色', value: 'light' },
+  { label: '深色', value: 'dark' },
+]
 
-// 同步
-const frequency = ref('实时')
 const frequencies = ['实时', '每 5 分钟', '每 30 分钟', '每小时']
-const conflict = ref('keep-both')
 const conflictOptions = [
   {
     value: 'keep-both',
@@ -48,22 +51,11 @@ const conflictOptions = [
     description: '其他设备的修改覆盖本机',
   },
 ]
-const bandwidth = ref(20)
-
-// 网络
-const wifiOnly = ref(false)
-const protocol = ref('自动（推荐）')
 const protocols = ['自动（推荐）', '强制加密', '中继传输']
-const proxy = ref('')
-
-// 通知
-const notifyDone = ref(true)
-const notifyConflict = ref(true)
-const notifyError = ref(true)
-const sound = ref('系统默认')
 const sounds = ['系统默认', '轻响', '无']
 
-function save() {
+function onSave() {
+  save()
   toast.add({
     title: '设置已保存',
     description: '更改将在下一次同步时生效',
@@ -72,8 +64,19 @@ function save() {
   })
 }
 
-function reset() {
+function onCancel() {
+  revert()
+  toast.add({
+    title: '已放弃更改',
+    description: '所有选项已还原为上次保存的值',
+    icon: 'i-lucide-undo-2',
+    color: 'neutral',
+  })
+}
+
+function onReset() {
   isResetOpen.value = false
+  reset()
   toast.add({
     title: '已恢复默认设置',
     description: '所有选项已还原为初始值',
@@ -86,16 +89,35 @@ function rebuildIndex() {
   rebuildOpen.value = false
   toast.add({
     title: '开始重建索引',
-    description: '正在扫描 3 个同步目录，请稍候…',
+    description: '正在扫描所有同步目录，请稍候…',
     icon: 'i-lucide-refresh-cw',
     color: 'primary',
   })
+}
+
+async function openLogs() {
+  try {
+    const dir = await openLogDir()
+    toast.add({
+      title: isTauri ? '已打开日志目录' : '日志目录',
+      description: dir,
+      icon: 'i-lucide-folder-open',
+      color: 'neutral',
+    })
+  } catch {
+    toast.add({
+      title: '无法打开日志目录',
+      description: '目录可能尚未创建',
+      icon: 'i-lucide-circle-alert',
+      color: 'error',
+    })
+  }
 }
 </script>
 
 <template>
   <div class="flex min-h-full gap-4 p-4">
-    <!-- 分类导航 -->
+    <!-- Category navigation -->
     <aside class="w-48 shrink-0">
       <h1 class="px-2 pt-0.5 text-base font-semibold text-highlighted">设置</h1>
       <p class="px-2 pb-3 pt-0.5 text-[11px] text-muted">管理同步服务的行为</p>
@@ -121,7 +143,7 @@ function rebuildIndex() {
       </nav>
     </aside>
 
-    <!-- 设置面板 -->
+    <!-- Settings panel -->
     <UCard class="min-w-0 flex-1 self-start" :ui="{ body: 'p-0' }">
       <template v-if="visibleCategories.length === 0">
         <div class="px-8 py-12">
@@ -134,14 +156,27 @@ function rebuildIndex() {
         </div>
       </template>
 
-      <!-- 通用 -->
+      <!-- General -->
       <div v-else-if="active === 'general'" class="divide-y divide-default">
+        <div class="flex items-center justify-between gap-6 px-5 py-4">
+          <div>
+            <p class="text-sm font-medium text-highlighted">外观</p>
+            <p class="mt-0.5 text-xs text-muted">界面使用的颜色主题</p>
+          </div>
+          <USelect
+            v-model="settings.theme"
+            :items="themeOptions"
+            value-key="value"
+            size="sm"
+            class="w-36"
+          />
+        </div>
         <div class="flex items-start justify-between gap-6 px-5 py-4">
           <div>
             <p class="text-sm font-medium text-highlighted">开机自动启动</p>
             <p class="mt-0.5 text-xs text-muted">登录系统后在后台自动运行</p>
           </div>
-          <USwitch v-model="launchAtStartup" aria-label="开机自动启动" />
+          <USwitch v-model="settings.launchAtStartup" aria-label="开机自动启动" />
         </div>
         <div class="flex items-start justify-between gap-6 px-5 py-4">
           <div>
@@ -150,7 +185,7 @@ function rebuildIndex() {
               关闭窗口时继续在后台保持同步
             </p>
           </div>
-          <USwitch v-model="minimizeToTray" aria-label="最小化到系统托盘" />
+          <USwitch v-model="settings.minimizeToTray" aria-label="最小化到系统托盘" />
         </div>
         <div class="flex items-start justify-between gap-6 px-5 py-4">
           <div>
@@ -159,11 +194,11 @@ function rebuildIndex() {
               检测到本地文件变化时立即开始传输
             </p>
           </div>
-          <USwitch v-model="autoSync" aria-label="文件变更自动同步" />
+          <USwitch v-model="settings.autoSync" aria-label="文件变更自动同步" />
         </div>
       </div>
 
-      <!-- 同步 -->
+      <!-- Sync -->
       <div v-else-if="active === 'sync'" class="divide-y divide-default">
         <div class="flex items-center justify-between gap-6 px-5 py-4">
           <div>
@@ -187,7 +222,7 @@ function rebuildIndex() {
             <p class="mt-0.5 text-xs text-muted">自动扫描本地文件变更的间隔</p>
           </div>
           <USelect
-            v-model="frequency"
+            v-model="settings.frequency"
             :items="frequencies"
             size="sm"
             class="w-36"
@@ -199,7 +234,7 @@ function rebuildIndex() {
             同一文件被多处修改时采取的策略
           </p>
           <URadioGroup
-            v-model="conflict"
+            v-model="settings.conflict"
             :items="conflictOptions"
             color="primary"
             class="mt-3"
@@ -212,11 +247,11 @@ function rebuildIndex() {
               <p class="mt-0.5 text-xs text-muted">限制同步占用的上行带宽</p>
             </div>
             <span class="text-sm font-medium tabular-nums text-highlighted">
-              {{ bandwidth }} MB/s
+              {{ settings.bandwidth }} MB/s
             </span>
           </div>
           <USlider
-            v-model="bandwidth"
+            v-model="settings.bandwidth"
             :min="0"
             :max="100"
             :step="5"
@@ -225,7 +260,7 @@ function rebuildIndex() {
         </div>
       </div>
 
-      <!-- 网络 -->
+      <!-- Network -->
       <div v-else-if="active === 'network'" class="divide-y divide-default">
         <div class="flex items-start justify-between gap-6 px-5 py-4">
           <div>
@@ -236,7 +271,7 @@ function rebuildIndex() {
               使用移动热点时暂停传输以节省流量
             </p>
           </div>
-          <USwitch v-model="wifiOnly" aria-label="仅在 Wi-Fi 下同步" />
+          <USwitch v-model="settings.wifiOnly" aria-label="仅在 Wi-Fi 下同步" />
         </div>
         <div class="flex items-center justify-between gap-6 px-5 py-4">
           <div>
@@ -244,7 +279,7 @@ function rebuildIndex() {
             <p class="mt-0.5 text-xs text-muted">设备之间的传输通道</p>
           </div>
           <USelect
-            v-model="protocol"
+            v-model="settings.protocol"
             :items="protocols"
             size="sm"
             class="w-36"
@@ -256,7 +291,7 @@ function rebuildIndex() {
             <p class="mt-0.5 text-xs text-muted">用于中继传输的 SOCKS5 代理</p>
           </div>
           <UInput
-            v-model="proxy"
+            v-model="settings.proxy"
             placeholder="socks5://127.0.0.1:1080"
             size="sm"
             class="w-52 select-text"
@@ -264,7 +299,7 @@ function rebuildIndex() {
         </div>
       </div>
 
-      <!-- 通知 -->
+      <!-- Notification -->
       <div
         v-else-if="active === 'notification'"
         class="divide-y divide-default"
@@ -274,32 +309,37 @@ function rebuildIndex() {
             <p class="text-sm font-medium text-highlighted">同步完成</p>
             <p class="mt-0.5 text-xs text-muted">任务完成后发送桌面通知</p>
           </div>
-          <USwitch v-model="notifyDone" aria-label="同步完成通知" />
+          <USwitch v-model="settings.notifyDone" aria-label="同步完成通知" />
         </div>
         <div class="flex items-start justify-between gap-6 px-5 py-4">
           <div>
             <p class="text-sm font-medium text-highlighted">检测到冲突</p>
             <p class="mt-0.5 text-xs text-muted">出现冲突文件时立即提醒</p>
           </div>
-          <USwitch v-model="notifyConflict" aria-label="冲突通知" />
+          <USwitch v-model="settings.notifyConflict" aria-label="冲突通知" />
         </div>
         <div class="flex items-start justify-between gap-6 px-5 py-4">
           <div>
             <p class="text-sm font-medium text-highlighted">同步失败</p>
             <p class="mt-0.5 text-xs text-muted">传输出错或设备离线时提醒</p>
           </div>
-          <USwitch v-model="notifyError" aria-label="失败通知" />
+          <USwitch v-model="settings.notifyError" aria-label="失败通知" />
         </div>
         <div class="flex items-center justify-between gap-6 px-5 py-4">
           <div>
             <p class="text-sm font-medium text-highlighted">提示音</p>
             <p class="mt-0.5 text-xs text-muted">收到通知时播放的声音</p>
           </div>
-          <USelect v-model="sound" :items="sounds" size="sm" class="w-36" />
+          <USelect
+            v-model="settings.sound"
+            :items="sounds"
+            size="sm"
+            class="w-36"
+          />
         </div>
       </div>
 
-      <!-- 高级 -->
+      <!-- Advanced -->
       <div v-else-if="active === 'advanced'" class="divide-y divide-default">
         <div class="px-5 py-4">
           <UCollapsible v-model:open="rebuildOpen">
@@ -345,6 +385,7 @@ function rebuildIndex() {
             color="neutral"
             variant="outline"
             size="xs"
+            @click="openLogs"
           />
         </div>
         <div class="flex items-start justify-between gap-6 px-5 py-4">
@@ -363,19 +404,28 @@ function rebuildIndex() {
         </div>
       </div>
 
-      <!-- 页脚 -->
-      <div class="flex justify-end gap-2 px-5 py-3.5">
-        <UButton label="取消" color="neutral" variant="ghost" size="sm" />
+      <!-- Footer -->
+      <div
+        v-if="visibleCategories.length > 0"
+        class="flex justify-end gap-2 px-5 py-3.5"
+      >
+        <UButton
+          label="取消"
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          @click="onCancel"
+        />
         <UButton
           label="保存更改"
           icon="i-lucide-check"
           size="sm"
-          @click="save"
+          @click="onSave"
         />
       </div>
     </UCard>
 
-    <!-- 恢复默认确认 -->
+    <!-- Reset confirmation -->
     <UModal
       v-model:open="isResetOpen"
       title="恢复默认设置？"
@@ -389,7 +439,7 @@ function rebuildIndex() {
           size="sm"
           @click="isResetOpen = false"
         />
-        <UButton label="恢复默认" color="error" size="sm" @click="reset" />
+        <UButton label="恢复默认" color="error" size="sm" @click="onReset" />
       </template>
     </UModal>
   </div>
