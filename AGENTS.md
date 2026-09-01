@@ -1,7 +1,5 @@
 # AGENTS.md
 
-AI 编程助手的仓库级指令文件。
-
 ## 项目概览
 
 - 基于 Tauri 2 的桌面应用：前端 TypeScript（Vue 3 + Vite + Tailwind CSS + Nuxt UI），后端 Rust。
@@ -24,51 +22,37 @@ AI 编程助手的仓库级指令文件。
 
 运行以下命令前必须获得用户明确同意：
 
-- 会修改工作区外文件的命令。
+- 会修改本仓库目录之外文件的命令。
 
-- 会产生更改的 git 命令（如 `git add`、`git commit`、`git push` 等），不会产生更改的命令（如 `git status`、`git diff`、`git log` 等）可以直接运行。
+- 会更改提交、暂存区或工作区文件的 git 命令（如 `git add`、`git commit`、`git push`、`git pull`、`git checkout`、`git reset` 等），只读命令（如 `git status`、`git diff`、`git log` 等）可以直接运行。
 
 - 会修改被 `.gitignore` 忽略文件（如 `node_modules`、`dist` 内的文件）的命令。
 
-- 会产生大量难以审查的修改的包管理命令（包含但不限于以下示例）：
-  - `pnpm add` / `pnpm remove`（会改动 `pnpm-lock.yaml`）
+- 会改动 lockfile 的包管理命令：
+  - `pnpm add` / `pnpm remove` / `pnpm update` / `pnpm install`（会改动 `pnpm-lock.yaml`）
 
-  - `cargo add` / `cargo remove`（会改动 `Cargo.lock`）
+  - `cargo add` / `cargo remove` / `cargo update`（会改动 `Cargo.lock`）
 
 ## 语言
 
-- 代码、注释、文档、git commit message 一律使用英文（本文档除外）。
+- 代码、注释、git commit message 使用英文，文档、直接面向用户展示的 UI 文案使用中文。
 
-- 回复用户、思考过程可以使用用户所用的语言。
-
-- 未做 i18n 的项目中，直接面向用户展示的本地化内容可使用原语言。
+- 聊天回复等其他输出使用用户所用的语言，除非用户有明确的语言偏好。
 
 - 本地化文件使用对应语言。
 
-- 标点符号的使用要符合对应语言的书写习惯，不要生搬硬套，比如分号在现代英文写作中并不常见。
+- 在自然语言中，标点符号的使用要符合对应语言的书写习惯，不应生搬硬套，比如分号在现代英文写作中并不常见。
 
 ## 知识库
 
 - 优先参考官方文档与源代码，其次才使用自身知识。
 
-- 必要时联网查询；本地已有代码或文档时直接使用。
+- 本地已有代码或文档时直接使用；本地没有相关资料或需要最新信息时联网查询。
 
 ## 代码风格
 
-处理用户任务前，特别是**修改任何文件之前**，必须完成以下任务，**不得跳过，也不得以"任务简单"、"与任务无关"等理由跳过**：
+- 换行符使用 `LF`。
 
-1. **完整读取** VS Code 两种设置作用域配置文件，即工作区（workspace）与用户（user）级设置：
+- 样式优先使用 Tailwind CSS 工具类，避免内联 `style` 与 `<style>` 块，确有需要时才编写自定义 CSS。
 
-- 工作区：仓库根目录下的 `.vscode/settings.json`，仅作用于当前仓库。
-
-- 用户：VS Code 的用户级（全局）设置文件 `settings.json`，作用于所有工作区。其路径因平台与安装方式（标准安装、scoop/homebrew/portable、自定义 `--user-data-dir` 等）而异，不要假设任何固定路径。可通过环境变量（如 `VSCODE_USER_PROMPTS_FOLDER` 等）推测其位置，或直接在本机搜索该文件；以实际找到的为准。
-
-2. 每次会话开始时，必须读取上述两个配置文件（工作区 `.vscode/settings.json` 与用户级 `settings.json`）的实际内容，再基于现状回答或修改，切勿假设其内容、路径或是否已存在该配置。
-
-3. 读取配置文件时必须覆盖其完整内容，不能只读取开头一部分；文件较长时应全文读取，并针对关键键（如 `files.eol`、`files.encoding`、`files.insertFinalNewline`、`prettier.*` 等）进行搜索，确保不遗漏任何相关设置。
-
-4. 全部完成后，才能修改文件。
-
-5. 尽量使用 Tailwind CSS 而不是自己写样式。
-
-6. 尽量使用 Nuxt UI tag 而不是原生 HTML tag。
+- UI 元素优先使用 Nuxt UI 组件，Nuxt UI 没有对应组件的原生标签（如布局用的 `div`、`span` 等）直接使用。
