@@ -13,16 +13,16 @@ importers:
     dependencies:
       '@nuxt/ui':
         specifier: ^4.11.0
-        version: 4.11.0(9409c2063881183711531d4f3f17d5b2)
+        version: 4.11.0(783cf2f2e44c4975beaebef665938e9f)
       '@tauri-apps/api':
         specifier: ^2.11.1
         version: 2.11.1
       '@tauri-apps/plugin-dialog':
-        specifier: ^2.7.2
-        version: 2.7.2
+        specifier: ^2.7.3
+        version: 2.7.3
       '@tauri-apps/plugin-opener':
-        specifier: ^2.5.4
-        version: 2.5.4
+        specifier: ^2.5.5
+        version: 2.5.5
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3
@@ -30,8 +30,8 @@ importers:
         specifier: ^3.5.42
         version: 3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2)
       zod:
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.5.4
+        version: 4.5.4
     devDependencies:
       '@microsoft/winappcli':
         specifier: ^0.6.2
@@ -50,7 +50,7 @@ importers:
         version: 8.2.2(esbuild@0.27.7)(jiti@2.7.0)
       vite-plugin-vue-devtools:
         specifier: ^8.2.1
-        version: 8.2.1(@nuxt/kit@4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2))
+        version: 8.2.1(@nuxt/kit@4.5.2(magic-string@1.2.3)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2))
       vue-tsc:
         specifier: ^3.3.11
         version: 3.3.11(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2)
@@ -804,11 +804,11 @@ packages:
     engines: {node: '>= 10'}
     hasBin: true
 
-  '@tauri-apps/plugin-dialog@2.7.2':
-    resolution: {integrity: sha512-pX0IGm1I3I6wc+zeKYcq1GSqogK6okCNX5fOdaNU5ab1AjGS6l1E5wFNjEb7meg7ZFSp0JUs+0jQGQNyOvLrsg==}
+  '@tauri-apps/plugin-dialog@2.7.3':
+    resolution: {integrity: sha512-CRgE+7TP4tvq9MjBU6f04NLTFIqVMLKHk3hAqlhil00ngK9ACTrXPH3oHpKMProxILodd3YjBoKbMwSI4IEcfA==}
 
-  '@tauri-apps/plugin-opener@2.5.4':
-    resolution: {integrity: sha512-1HnPkb+AmgO29HBazm4uPLKB+r7zzcTBW1d0fyYp1uP+jwtpoiNDGKMMzz58SFp49nOIrxdE3aUJtT57lfO9CQ==}
+  '@tauri-apps/plugin-opener@2.5.5':
+    resolution: {integrity: sha512-xvzGai5aQds8j8R8RsUK/lW6pGG50YgOYIPLzvkqmkwAj7dfySOD7sGtejRzvVdMmv1EQfKVEFh1MvmDp8QR0g==}
 
   '@tiptap/core@3.30.5':
     resolution: {integrity: sha512-3O7N0FyKIfuLV+xrdWyDM3V5eUY/q2CgLjhhMwOAbM1Pu7VPp9VP+TpEYOdH8aRyB+h1vj5hX5A747D8ZrPfHA==}
@@ -2437,8 +2437,8 @@ packages:
     resolution: {integrity: sha512-lfiJIIC4Xayt5ItynE407ehlE03pCjeOc4hkR4yxxvvNJ4kuiN25B0g+Qp8XagYz361LLL7DCzR5bvFJ81QKtQ==}
     engines: {node: '>=16.0.0', npm: '>=8.0.0'}
 
-  zod@4.5.2:
-    resolution: {integrity: sha512-XkYXCol10+ba/6F/cueWV+TezUeOqXW0hdeJt5CdXjTYeAgAQg5N03RQdJ80mhfFE72+pblvYMW4wy2Qp4Qbrg==}
+  zod@4.5.4:
+    resolution: {integrity: sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA==}
 
 snapshots:
 
@@ -2788,9 +2788,9 @@ snapshots:
 
   '@microsoft/winappcli@0.6.2': {}
 
-  '@nuxt/devtools-kit@3.4.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))':
+  '@nuxt/devtools-kit@3.4.2(magic-string@1.2.3)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))':
     dependencies:
-      '@nuxt/kit': 4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))
+      '@nuxt/kit': 4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))
       execa: 8.0.1
       vite: 8.2.2(esbuild@0.27.7)(jiti@2.7.0)
     transitivePeerDependencies:
@@ -2800,10 +2800,10 @@ snapshots:
       - rolldown
       - unplugin
 
-  '@nuxt/fonts@0.14.0(esbuild@0.27.7)(magic-string@1.2.3)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))':
+  '@nuxt/fonts@0.14.0(magic-string@1.2.3)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))':
     dependencies:
-      '@nuxt/devtools-kit': 3.4.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
-      '@nuxt/kit': 4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))
+      '@nuxt/devtools-kit': 3.4.2(magic-string@1.2.3)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
+      '@nuxt/kit': 4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))
       consola: 3.4.2
       defu: 6.1.7
       fontless: 0.2.1(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
@@ -2815,7 +2815,7 @@ snapshots:
       tinyglobby: 0.2.17
       ufo: 1.6.4
       unifont: 0.7.5
-      unplugin: 3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
+      unplugin: 3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
       unstorage: 1.17.5
     transitivePeerDependencies:
       - '@azure/app-configuration'
@@ -2850,14 +2850,14 @@ snapshots:
       - vite
       - webpack
 
-  '@nuxt/icon@2.5.1(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2))':
+  '@nuxt/icon@2.5.1(magic-string@1.2.3)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2))':
     dependencies:
       '@iconify/collections': 1.0.729
       '@iconify/types': 2.0.0
       '@iconify/utils': 3.1.4
       '@iconify/vue': 5.0.1(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2))
-      '@nuxt/devtools-kit': 3.4.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
-      '@nuxt/kit': 4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))
+      '@nuxt/devtools-kit': 3.4.2(magic-string@1.2.3)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
+      '@nuxt/kit': 4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))
       consola: 3.4.2
       local-pkg: 1.2.1
       mlly: 1.8.2
@@ -2875,7 +2875,7 @@ snapshots:
       - vite
       - vue
 
-  '@nuxt/kit@4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))':
+  '@nuxt/kit@4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))':
     dependencies:
       c12: 3.3.4
       consola: 3.4.2
@@ -2895,7 +2895,7 @@ snapshots:
       scule: 1.3.0
       tinyglobby: 0.2.17
       ufo: 1.6.4
-      unctx: 3.0.1(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))
+      unctx: 3.0.1(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))
       untyped: 2.0.0
       verkit: 0.3.2
     transitivePeerDependencies:
@@ -2914,15 +2914,15 @@ snapshots:
       pkg-types: 2.3.1
       std-env: 4.2.0
 
-  '@nuxt/ui@4.11.0(9409c2063881183711531d4f3f17d5b2)':
+  '@nuxt/ui@4.11.0(783cf2f2e44c4975beaebef665938e9f)':
     dependencies:
       '@floating-ui/dom': 1.8.0
       '@iconify/vue': 5.0.1(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2))
-      '@nuxt/fonts': 0.14.0(esbuild@0.27.7)(magic-string@1.2.3)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
-      '@nuxt/icon': 2.5.1(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2))
-      '@nuxt/kit': 4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))
+      '@nuxt/fonts': 0.14.0(magic-string@1.2.3)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
+      '@nuxt/icon': 2.5.1(magic-string@1.2.3)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2))
+      '@nuxt/kit': 4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))
       '@nuxt/schema': 4.5.2
-      '@nuxtjs/color-mode': 4.0.1(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))
+      '@nuxtjs/color-mode': 4.0.1(magic-string@1.2.3)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))
       '@standard-schema/spec': 1.1.0
       '@tailwindcss/postcss': 4.3.3
       '@tailwindcss/vite': 4.3.3(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
@@ -2945,7 +2945,7 @@ snapshots:
       '@tiptap/starter-kit': 3.30.5
       '@tiptap/suggestion': 3.30.5(@floating-ui/dom@1.8.0)(@tiptap/core@3.30.5(@tiptap/pm@3.30.5))(@tiptap/pm@3.30.5)
       '@tiptap/vue-3': 3.30.5(@floating-ui/dom@1.8.0)(@tiptap/core@3.30.5(@tiptap/pm@3.30.5))(@tiptap/pm@3.30.5)(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2))
-      '@unhead/vue': 3.4.0(@oxc-project/types@0.147.0)(esbuild@0.27.7)(lightningcss@1.33.0)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2))
+      '@unhead/vue': 3.4.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2))
       '@vueuse/core': 14.4.0(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2))
       '@vueuse/integrations': 14.4.0(fuse.js@7.5.0)(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2))
       '@vueuse/shared': 14.4.0(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2))
@@ -2975,15 +2975,15 @@ snapshots:
       tinyglobby: 0.2.17
       typescript: typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2
       ufo: 1.6.4
-      unplugin: 3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
-      unplugin-auto-import: 21.1.0(@nuxt/kit@4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))))(@vueuse/core@14.4.0(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2)))(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
-      unplugin-vue-components: 32.1.0(@nuxt/kit@4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))))(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2))
+      unplugin: 3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
+      unplugin-auto-import: 21.1.0(@nuxt/kit@4.5.2(magic-string@1.2.3)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))))(@vueuse/core@14.4.0(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2)))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
+      unplugin-vue-components: 32.1.0(@nuxt/kit@4.5.2(magic-string@1.2.3)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2))
       vaul-vue: 0.4.1(reka-ui@2.10.3(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2)))(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2))
       vue-component-type-helpers: 3.3.11
     optionalDependencies:
       '@internationalized/date': 3.12.3
       '@internationalized/number': 3.6.7
-      zod: 4.5.2
+      zod: 4.5.4
     transitivePeerDependencies:
       - '@azure/app-configuration'
       - '@azure/cosmos'
@@ -3035,9 +3035,9 @@ snapshots:
       - vue
       - webpack
 
-  '@nuxtjs/color-mode@4.0.1(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))':
+  '@nuxtjs/color-mode@4.0.1(magic-string@1.2.3)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))':
     dependencies:
-      '@nuxt/kit': 4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))
+      '@nuxt/kit': 4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))
       exsolve: 1.1.1
       pathe: 2.0.3
       pkg-types: 2.3.1
@@ -3245,11 +3245,11 @@ snapshots:
       '@tauri-apps/cli-win32-ia32-msvc': 2.11.4
       '@tauri-apps/cli-win32-x64-msvc': 2.11.4
 
-  '@tauri-apps/plugin-dialog@2.7.2':
+  '@tauri-apps/plugin-dialog@2.7.3':
     dependencies:
       '@tauri-apps/api': 2.11.1
 
-  '@tauri-apps/plugin-opener@2.5.4':
+  '@tauri-apps/plugin-opener@2.5.5':
     dependencies:
       '@tauri-apps/api': 2.11.1
 
@@ -3507,16 +3507,13 @@ snapshots:
   '@typescript-native-bridge/win32-x64@6.0.3-bridge.15.tsgo.7.0.2':
     optional: true
 
-  '@unhead/bundler@3.4.0(@oxc-project/types@0.147.0)(esbuild@0.27.7)(lightningcss@1.33.0)(rolldown@1.2.6)(unhead@3.4.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))':
+  '@unhead/bundler@3.4.0(unhead@3.4.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))':
     dependencies:
       magic-string: 1.2.3
-      oxc-walker: 1.1.1(@oxc-project/types@0.147.0)(rolldown@1.2.6)
-      unhead: 3.4.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
-      unplugin: 3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
+      oxc-walker: 1.1.1
+      unhead: 3.4.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
+      unplugin: 3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
     optionalDependencies:
-      esbuild: 0.27.7
-      lightningcss: 1.33.0
-      rolldown: 1.2.6
       vite: 8.2.2(esbuild@0.27.7)(jiti@2.7.0)
     transitivePeerDependencies:
       - '@farmfe/core'
@@ -3526,12 +3523,12 @@ snapshots:
       - rollup
       - unloader
 
-  '@unhead/vue@3.4.0(@oxc-project/types@0.147.0)(esbuild@0.27.7)(lightningcss@1.33.0)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2))':
+  '@unhead/vue@3.4.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2))':
     dependencies:
-      '@unhead/bundler': 3.4.0(@oxc-project/types@0.147.0)(esbuild@0.27.7)(lightningcss@1.33.0)(rolldown@1.2.6)(unhead@3.4.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
+      '@unhead/bundler': 3.4.0(unhead@3.4.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
       hookable: 6.1.1
-      unhead: 3.4.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
-      unplugin: 3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
+      unhead: 3.4.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
+      unplugin: 3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
       vue: 3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2)
     optionalDependencies:
       vite: 8.2.2(esbuild@0.27.7)(jiti@2.7.0)
@@ -4277,10 +4274,7 @@ snapshots:
 
   orderedmap@2.1.1: {}
 
-  oxc-walker@1.1.1(@oxc-project/types@0.147.0)(rolldown@1.2.6):
-    optionalDependencies:
-      '@oxc-project/types': 0.147.0
-      rolldown: 1.2.6
+  oxc-walker@1.1.1: {}
 
   package-manager-detector@1.8.0: {}
 
@@ -4520,18 +4514,18 @@ snapshots:
 
   uncrypto@0.1.3: {}
 
-  unctx@3.0.1(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))):
+  unctx@3.0.1(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))):
     optionalDependencies:
       magic-string: 1.2.3
       rolldown: 1.2.6
-      unplugin: 3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
+      unplugin: 3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
 
   undici@8.10.0: {}
 
-  unhead@3.4.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)):
+  unhead@3.4.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)):
     dependencies:
       hookable: 6.1.1
-      unplugin: 3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
+      unplugin: 3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
     optionalDependencies:
       vite: 8.2.2(esbuild@0.27.7)(jiti@2.7.0)
     transitivePeerDependencies:
@@ -4550,7 +4544,7 @@ snapshots:
       ohash: 2.0.12
       undici: 8.10.0
 
-  unimport@6.4.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)):
+  unimport@6.4.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)):
     dependencies:
       acorn: 8.18.0
       escape-string-regexp: 5.0.0
@@ -4564,10 +4558,8 @@ snapshots:
       scule: 1.3.0
       strip-literal: 4.0.0
       tinyglobby: 0.2.17
-      unplugin: 3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
+      unplugin: 3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
       unplugin-utils: 0.3.2
-    optionalDependencies:
-      rolldown: 1.2.6
     transitivePeerDependencies:
       - '@farmfe/core'
       - '@rspack/core'
@@ -4578,16 +4570,16 @@ snapshots:
       - vite
       - webpack
 
-  unplugin-auto-import@21.1.0(@nuxt/kit@4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))))(@vueuse/core@14.4.0(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2)))(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)):
+  unplugin-auto-import@21.1.0(@nuxt/kit@4.5.2(magic-string@1.2.3)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))))(@vueuse/core@14.4.0(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2)))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)):
     dependencies:
       local-pkg: 1.2.1
       magic-string: 1.2.3
       picomatch: 4.0.7
-      unimport: 6.4.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
-      unplugin: 3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
+      unimport: 6.4.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
+      unplugin: 3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
       unplugin-utils: 0.3.2
     optionalDependencies:
-      '@nuxt/kit': 4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))
+      '@nuxt/kit': 4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))
       '@vueuse/core': 14.4.0(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2))
     transitivePeerDependencies:
       - '@farmfe/core'
@@ -4606,7 +4598,7 @@ snapshots:
       pathe: 2.0.3
       picomatch: 4.0.7
 
-  unplugin-vue-components@32.1.0(@nuxt/kit@4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))))(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2)):
+  unplugin-vue-components@32.1.0(@nuxt/kit@4.5.2(magic-string@1.2.3)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2)):
     dependencies:
       chokidar: 5.0.0
       local-pkg: 1.2.1
@@ -4615,11 +4607,11 @@ snapshots:
       obug: 2.1.4
       picomatch: 4.0.7
       tinyglobby: 0.2.17
-      unplugin: 3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
+      unplugin: 3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
       unplugin-utils: 0.3.2
       vue: 3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2)
     optionalDependencies:
-      '@nuxt/kit': 4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))
+      '@nuxt/kit': 4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))
     transitivePeerDependencies:
       - '@farmfe/core'
       - '@rspack/core'
@@ -4638,14 +4630,12 @@ snapshots:
       picomatch: 4.0.7
       webpack-virtual-modules: 0.6.2
 
-  unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)):
+  unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)):
     dependencies:
       '@jridgewell/remapping': 2.3.5
       picomatch: 4.0.7
       webpack-virtual-modules: 0.6.2
     optionalDependencies:
-      esbuild: 0.27.7
-      rolldown: 1.2.6
       vite: 8.2.2(esbuild@0.27.7)(jiti@2.7.0)
 
   unstorage@1.17.5:
@@ -4693,7 +4683,7 @@ snapshots:
     dependencies:
       vite: 8.2.2(esbuild@0.27.7)(jiti@2.7.0)
 
-  vite-plugin-inspect@11.4.1(@nuxt/kit@4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)):
+  vite-plugin-inspect@11.4.1(@nuxt/kit@4.5.2(magic-string@1.2.3)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)):
     dependencies:
       ansis: 4.3.1
       error-stack-parser-es: 1.0.5
@@ -4706,16 +4696,16 @@ snapshots:
       vite: 8.2.2(esbuild@0.27.7)(jiti@2.7.0)
       vite-dev-rpc: 2.0.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
     optionalDependencies:
-      '@nuxt/kit': 4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))
+      '@nuxt/kit': 4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0)))
 
-  vite-plugin-vue-devtools@8.2.1(@nuxt/kit@4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2)):
+  vite-plugin-vue-devtools@8.2.1(@nuxt/kit@4.5.2(magic-string@1.2.3)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2)):
     dependencies:
       '@vue/devtools-core': 8.2.1(vue@3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2))
       '@vue/devtools-kit': 8.2.1
       '@vue/devtools-shared': 8.2.1
       sirv: 3.0.2
       vite: 8.2.2(esbuild@0.27.7)(jiti@2.7.0)
-      vite-plugin-inspect: 11.4.1(@nuxt/kit@4.5.2(magic-string@1.2.3)(rolldown@1.2.6)(unplugin@3.3.0(esbuild@0.27.7)(rolldown@1.2.6)(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
+      vite-plugin-inspect: 11.4.1(@nuxt/kit@4.5.2(magic-string@1.2.3)(unplugin@3.3.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))))(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
       vite-plugin-vue-inspector: 6.0.0(vite@8.2.2(esbuild@0.27.7)(jiti@2.7.0))
       vue: 3.5.42(typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2)
     transitivePeerDependencies:
@@ -4799,4 +4789,4 @@ snapshots:
     dependencies:
       lib0: 0.2.117
 
-  zod@4.5.2: {}
+  zod@4.5.4: {}
