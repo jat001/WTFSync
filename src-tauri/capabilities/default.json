@@ -6,8 +6,8 @@
   "permissions": [
     "core:default",
     "dialog:default",
+    "fs:default",
     "opener:default",
-    "opener:allow-open-path",
     "store:default",
     "window-state:default"
   ]

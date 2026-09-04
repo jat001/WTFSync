@@ -2,6 +2,7 @@ import { Store } from '@tauri-apps/plugin-store'
 import { reactive, watch } from 'vue'
 import { z } from 'zod'
 
+import { allowFsDirectories } from '../lib/fs'
 import { isTauri } from '../lib/tauri'
 
 /**
@@ -31,6 +32,8 @@ export const settingsSchema = z.object({
   notifyConflict: z.boolean().catch(true),
   notifyError: z.boolean().catch(true),
   sound: z.enum(['system', 'chime', 'none']).catch('system'),
+  // Folders watched for sync; fs access is granted to them at runtime.
+  watchPaths: z.array(z.string()).catch([]),
 })
 
 export type Settings = z.infer<typeof settingsSchema>
@@ -99,6 +102,12 @@ watch(settings, schedulePersist, { deep: true })
 export const settingsReady: Promise<void> = (async () => {
   Object.assign(settings, await readPersisted())
   hydrated = true
+  // Grant fs access to persisted watch directories on launch. Globs are
+  // matched at access time on the backend, so subdirectories and files
+  // created later are covered without re-authorizing.
+  if (isTauri) {
+    await allowFsDirectories([...settings.watchPaths])
+  }
 })()
 
 export function useSettings() {

@@ -3,13 +3,18 @@ import { open } from '@tauri-apps/plugin-dialog'
 import { ref } from 'vue'
 
 import { useModal } from '../composables/useModal'
+import { useSettings } from '../composables/useSettings'
+import { allowFsDirectories } from '../lib/fs'
+import { openDirectory } from '../lib/open'
 import { isTauri } from '../lib/tauri'
 
 const { closeModal } = useModal()
+const { settings } = useSettings()
 const toast = useToast()
 
-// Mock config: watched directories (array[str])
-const paths = ref<string[]>(['D:/Documents', 'D:/Work'])
+// Work on a local draft copy so "取消" discards changes; commit on "保存".
+// The modal is recreated each time it opens (v-if), so this starts fresh.
+const paths = ref<string[]>([...settings.watchPaths])
 const draft = ref('')
 
 function addPath() {
@@ -21,6 +26,28 @@ function addPath() {
 
 function removePath(p: string) {
   paths.value = paths.value.filter((x) => x !== p)
+}
+
+async function openInExplorer(p: string) {
+  if (!isTauri) {
+    toast.add({
+      title: '浏览器预览中不可用',
+      description: '请在桌面应用中打开目录',
+      icon: 'i-lucide-info',
+      color: 'warning',
+    })
+    return
+  }
+  try {
+    await openDirectory(p)
+  } catch {
+    toast.add({
+      title: '无法打开目录',
+      description: '请确认路径是否存在',
+      icon: 'i-lucide-circle-alert',
+      color: 'error',
+    })
+  }
 }
 
 async function browse() {
@@ -37,7 +64,25 @@ async function browse() {
   if (typeof selected === 'string') draft.value = selected
 }
 
-function save() {
+async function save() {
+  // Commit the draft to settings; the settings watcher persists it.
+  settings.watchPaths = [...paths.value]
+
+  // Authorize fs access to the newly configured directories at runtime.
+  // Persisted paths are also granted on launch, but granting here covers the
+  // current session immediately (and any path just added).
+  if (isTauri) {
+    const failed = await allowFsDirectories(paths.value)
+    if (failed.length > 0) {
+      toast.add({
+        title: '部分目录无法授权访问',
+        description: failed.join('、'),
+        icon: 'i-lucide-circle-alert',
+        color: 'error',
+      })
+    }
+  }
+
   toast.add({
     title: '监视目录已保存',
     description: `共 ${paths.value.length} 个目录`,
@@ -57,17 +102,27 @@ function save() {
       <li
         v-for="p in paths"
         :key="p"
-        class="flex items-center justify-between rounded-md border border-default bg-muted px-3 py-2"
+        class="flex items-center justify-between gap-2 rounded-md border border-default bg-muted px-3 py-2"
       >
-        <span class="truncate select-text text-sm">{{ p }}</span>
-        <UButton
-          icon="i-lucide-trash-2"
-          color="error"
-          variant="ghost"
-          size="xs"
-          aria-label="移除"
-          @click="removePath(p)"
-        />
+        <span class="min-w-0 flex-1 truncate select-text text-sm">{{ p }}</span>
+        <div class="flex shrink-0 items-center">
+          <UButton
+            icon="i-lucide-folder-open"
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            aria-label="在资源管理器中打开"
+            @click="openInExplorer(p)"
+          />
+          <UButton
+            icon="i-lucide-trash-2"
+            color="error"
+            variant="ghost"
+            size="xs"
+            aria-label="移除"
+            @click="removePath(p)"
+          />
+        </div>
       </li>
     </ul>
     <UEmpty

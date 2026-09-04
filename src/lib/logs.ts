@@ -1,6 +1,6 @@
 import { appLogDir } from '@tauri-apps/api/path'
-import { openPath } from '@tauri-apps/plugin-opener'
 
+import { openDirectory } from './open'
 import { isTauri } from './tauri'
 
 /**
@@ -11,6 +11,6 @@ import { isTauri } from './tauri'
 export async function openLogDir(): Promise<string> {
   if (!isTauri) return '%APPDATA%/WTFSync/logs'
   const dir = await appLogDir()
-  await openPath(dir)
+  await openDirectory(dir)
   return dir
 }
