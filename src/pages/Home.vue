@@ -3,10 +3,10 @@ import { open } from '@tauri-apps/plugin-dialog'
 import { computed, ref } from 'vue'
 
 import {
-  useSyncState,
-  type Transfer,
-} from './composables/useSyncState'
-import { isTauri } from './lib/tauri'
+    useSyncState,
+    type Transfer,
+} from '../composables/useSyncState'
+import { isTauri } from '../lib/tauri'
 
 const toast = useToast()
 

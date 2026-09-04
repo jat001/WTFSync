@@ -24,7 +24,7 @@ export interface FolderNode {
   children?: FolderNode[]
 }
 
-// Module-level singletons shared by every page (same pattern as ui/modal.ts).
+// Module-level singletons shared by every page (same pattern as useModal.ts).
 // Once the backend commands exist, these refs become the single place to hydrate.
 const syncing = ref(true)
 

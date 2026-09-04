@@ -2,8 +2,8 @@
 import { open } from '@tauri-apps/plugin-dialog'
 import { ref } from 'vue'
 
+import { useModal } from '../composables/useModal'
 import { isTauri } from '../lib/tauri'
-import { useModal } from '../ui/modal'
 
 const { closeModal } = useModal()
 const toast = useToast()

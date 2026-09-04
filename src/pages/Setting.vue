@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import { useSettings } from './composables/useSettings'
-import { openLogDir } from './lib/logs'
-import { isTauri } from './lib/tauri'
-import { useModal } from './ui/modal'
+import { useModal } from '../composables/useModal'
+import { useSettings } from '../composables/useSettings'
+import { openLogDir } from '../lib/logs'
+import { isTauri } from '../lib/tauri'
 
 const toast = useToast()
 const { openModal } = useModal()

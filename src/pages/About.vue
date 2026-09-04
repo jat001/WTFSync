@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import pkg from '../package.json'
-import AppLogo from './components/AppLogo.vue'
-import { openLogDir } from './lib/logs'
-import { isTauri } from './lib/tauri'
+import pkg from '../../package.json'
+import AppLogo from '../components/AppLogo.vue'
+import { openLogDir } from '../lib/logs'
+import { isTauri } from '../lib/tauri'
 
 const toast = useToast()
 const version = pkg.version

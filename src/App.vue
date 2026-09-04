@@ -2,15 +2,15 @@
 import { computed, onBeforeUnmount, onMounted, ref, type Component } from 'vue'
 
 import pkg from '../package.json'
-import About from './About.vue'
 import AppLogo from './components/AppLogo.vue'
 import WatchPathsModal from './components/WatchPathsModal.vue'
+import { useModal } from './composables/useModal'
+import type { ThemeMode } from './composables/useSettings'
 import { useSyncState } from './composables/useSyncState'
 import { useTheme } from './composables/useTheme'
-import type { ThemeMode } from './composables/useSettings'
-import Home from './Home.vue'
-import Setting from './Setting.vue'
-import { useModal } from './ui/modal'
+import About from './pages/About.vue'
+import Home from './pages/Home.vue'
+import Setting from './pages/Setting.vue'
 
 type PageKey = 'home' | 'setting' | 'about'
 
