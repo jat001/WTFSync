@@ -61,7 +61,7 @@ async function openLogs() {
         icon="i-lucide-circle-check"
         title="已是最新版本"
         description="跨设备同步服务运行正常"
-        class="mx-6"
+        class="mx-6 w-auto"
       />
 
       <!-- Info list -->
