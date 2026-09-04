@@ -8,7 +8,7 @@ import { isTauri } from '../lib/tauri'
 
 const toast = useToast()
 const { openModal } = useModal()
-const { settings, save, reset, revert } = useSettings()
+const { settings, reset } = useSettings()
 
 const query = ref('')
 const active = ref('general')
@@ -33,7 +33,12 @@ const themeOptions = [
   { label: '深色', value: 'dark' },
 ]
 
-const frequencies = ['实时', '每 5 分钟', '每 30 分钟', '每小时']
+const frequencies = [
+  { label: '实时', value: 'realtime' },
+  { label: '每 5 分钟', value: '5min' },
+  { label: '每 30 分钟', value: '30min' },
+  { label: '每小时', value: 'hourly' },
+]
 const conflictOptions = [
   {
     value: 'keep-both',
@@ -51,28 +56,16 @@ const conflictOptions = [
     description: '其他设备的修改覆盖本机',
   },
 ]
-const protocols = ['自动（推荐）', '强制加密', '中继传输']
-const sounds = ['系统默认', '轻响', '无']
-
-function onSave() {
-  save()
-  toast.add({
-    title: '设置已保存',
-    description: '更改将在下一次同步时生效',
-    icon: 'i-lucide-circle-check',
-    color: 'success',
-  })
-}
-
-function onCancel() {
-  revert()
-  toast.add({
-    title: '已放弃更改',
-    description: '所有选项已还原为上次保存的值',
-    icon: 'i-lucide-undo-2',
-    color: 'neutral',
-  })
-}
+const protocols = [
+  { label: '自动（推荐）', value: 'auto' },
+  { label: '强制加密', value: 'encrypted' },
+  { label: '中继传输', value: 'relay' },
+]
+const sounds = [
+  { label: '系统默认', value: 'system' },
+  { label: '轻响', value: 'chime' },
+  { label: '无', value: 'none' },
+]
 
 function onReset() {
   isResetOpen.value = false
@@ -176,7 +169,10 @@ async function openLogs() {
             <p class="text-sm font-medium text-highlighted">开机自动启动</p>
             <p class="mt-0.5 text-xs text-muted">登录系统后在后台自动运行</p>
           </div>
-          <USwitch v-model="settings.launchAtStartup" aria-label="开机自动启动" />
+          <USwitch
+            v-model="settings.launchAtStartup"
+            aria-label="开机自动启动"
+          />
         </div>
         <div class="flex items-start justify-between gap-6 px-5 py-4">
           <div>
@@ -185,7 +181,10 @@ async function openLogs() {
               关闭窗口时继续在后台保持同步
             </p>
           </div>
-          <USwitch v-model="settings.minimizeToTray" aria-label="最小化到系统托盘" />
+          <USwitch
+            v-model="settings.minimizeToTray"
+            aria-label="最小化到系统托盘"
+          />
         </div>
         <div class="flex items-start justify-between gap-6 px-5 py-4">
           <div>
@@ -224,6 +223,7 @@ async function openLogs() {
           <USelect
             v-model="settings.frequency"
             :items="frequencies"
+            value-key="value"
             size="sm"
             class="w-36"
           />
@@ -281,6 +281,7 @@ async function openLogs() {
           <USelect
             v-model="settings.protocol"
             :items="protocols"
+            value-key="value"
             size="sm"
             class="w-36"
           />
@@ -333,6 +334,7 @@ async function openLogs() {
           <USelect
             v-model="settings.sound"
             :items="sounds"
+            value-key="value"
             size="sm"
             class="w-36"
           />
@@ -404,24 +406,13 @@ async function openLogs() {
         </div>
       </div>
 
-      <!-- Footer -->
+      <!-- Auto-save hint -->
       <div
         v-if="visibleCategories.length > 0"
-        class="flex justify-end gap-2 px-5 py-3.5"
+        class="flex items-center justify-end gap-1.5 border-t border-default px-5 py-3 text-xs text-muted"
       >
-        <UButton
-          label="取消"
-          color="neutral"
-          variant="ghost"
-          size="sm"
-          @click="onCancel"
-        />
-        <UButton
-          label="保存更改"
-          icon="i-lucide-check"
-          size="sm"
-          @click="onSave"
-        />
+        <UIcon name="i-lucide-check" class="size-3.5" />
+        <span>更改会自动保存</span>
       </div>
     </UCard>
 

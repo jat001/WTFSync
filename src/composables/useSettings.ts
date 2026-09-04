@@ -1,79 +1,111 @@
-import { reactive } from 'vue'
+import { Store } from '@tauri-apps/plugin-store'
+import { reactive, watch } from 'vue'
+import { z } from 'zod'
 
-export type ThemeMode = 'light' | 'dark' | 'system'
+import { isTauri } from '../lib/tauri'
 
-export interface Settings {
+/**
+ * Settings schema: every key carries a `.catch(default)` so that any
+ * missing/invalid value in the persisted store transparently falls back
+ * to its default, and unknown keys are stripped during parsing.
+ * Stored values are English; Chinese labels live in the UI layer only.
+ */
+export const settingsSchema = z.object({
   // General
-  theme: ThemeMode
-  launchAtStartup: boolean
-  minimizeToTray: boolean
-  autoSync: boolean
+  theme: z.enum(['light', 'dark', 'system']).catch('system'),
+  launchAtStartup: z.boolean().catch(true),
+  minimizeToTray: z.boolean().catch(true),
+  autoSync: z.boolean().catch(true),
   // Sync
-  frequency: string
-  conflict: 'keep-both' | 'local-wins' | 'remote-wins'
-  bandwidth: number
+  frequency: z.enum(['realtime', '5min', '30min', 'hourly']).catch('realtime'),
+  conflict: z
+    .enum(['keep-both', 'local-wins', 'remote-wins'])
+    .catch('keep-both'),
+  bandwidth: z.number().catch(20),
   // Network
-  wifiOnly: boolean
-  protocol: string
-  proxy: string
+  wifiOnly: z.boolean().catch(false),
+  protocol: z.enum(['auto', 'encrypted', 'relay']).catch('auto'),
+  proxy: z.string().catch(''),
   // Notification
-  notifyDone: boolean
-  notifyConflict: boolean
-  notifyError: boolean
-  sound: string
-}
+  notifyDone: z.boolean().catch(true),
+  notifyConflict: z.boolean().catch(true),
+  notifyError: z.boolean().catch(true),
+  sound: z.enum(['system', 'chime', 'none']).catch('system'),
+})
 
-export const defaultSettings: Settings = {
-  theme: 'system',
-  launchAtStartup: true,
-  minimizeToTray: true,
-  autoSync: true,
-  frequency: '实时',
-  conflict: 'keep-both',
-  bandwidth: 20,
-  wifiOnly: false,
-  protocol: '自动（推荐）',
-  proxy: '',
-  notifyDone: true,
-  notifyConflict: true,
-  notifyError: true,
-  sound: '系统默认',
-}
+export type Settings = z.infer<typeof settingsSchema>
+export type ThemeMode = Settings['theme']
 
+// Parsing an empty object produces the fully-populated default values.
+export const defaultSettings: Settings = settingsSchema.parse({})
+
+const STORE_FILE = 'settings.json'
+const STORE_KEY = 'settings'
 const STORAGE_KEY = 'wtfsync:settings'
 
-// Persisted in localStorage for now; the backend already registers
-// tauri-plugin-store, so this can move to plugin-store once its JS
-// package is added to package.json.
-function load(): Settings {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return { ...defaultSettings, ...(JSON.parse(raw) as Settings) }
-  } catch {
-    // Ignore corrupted data and fall back to defaults.
+// Reuse one Store handle; every load targets the same backing file.
+let storePromise: Promise<Store> | null = null
+function getStore(): Promise<Store> {
+  storePromise ??= Store.load(STORE_FILE)
+  return storePromise
+}
+
+/** Read & validate the persisted settings, falling back to defaults. */
+async function readPersisted(): Promise<Settings> {
+  let raw: unknown = null
+  if (isTauri) {
+    raw = await (await getStore()).get(STORE_KEY)
+  } else {
+    // Browser fallback for `pnpm dev` outside the Tauri webview.
+    try {
+      const value = localStorage.getItem(STORAGE_KEY)
+      if (value) raw = JSON.parse(value)
+    } catch {
+      // Corrupted data is treated as absent.
+    }
   }
-  return { ...defaultSettings }
+  return settingsSchema.parse(raw ?? {})
+}
+
+async function writePersisted(value: Settings): Promise<void> {
+  if (isTauri) {
+    const store = await getStore()
+    await store.set(STORE_KEY, value)
+    await store.save()
+  } else {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(value))
+  }
 }
 
 // Module-level singleton so every page edits the same settings object.
-const settings = reactive<Settings>(load())
+// It starts from defaults and hydrates asynchronously from the store.
+const settings = reactive<Settings>({ ...defaultSettings })
+let hydrated = false
+
+// Coalesce rapid edits (e.g. dragging the bandwidth slider) into one write.
+let writeTimer: ReturnType<typeof setTimeout> | undefined
+function schedulePersist() {
+  if (!hydrated) return
+  clearTimeout(writeTimer)
+  writeTimer = setTimeout(() => {
+    void writePersisted({ ...settings })
+  }, 300)
+}
+
+// Persist automatically on any change once hydration is done.
+watch(settings, schedulePersist, { deep: true })
+
+/** Resolves once the persisted settings have been loaded and validated. */
+export const settingsReady: Promise<void> = (async () => {
+  Object.assign(settings, await readPersisted())
+  hydrated = true
+})()
 
 export function useSettings() {
-  /** Persist the current settings. */
-  function save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
-  }
-
-  /** Restore defaults and persist them. */
+  /** Restore defaults; the watcher persists them automatically. */
   function reset() {
     Object.assign(settings, defaultSettings)
-    save()
   }
 
-  /** Discard unsaved edits by reloading the last persisted values. */
-  function revert() {
-    Object.assign(settings, load())
-  }
-
-  return { settings, save, reset, revert }
+  return { settings, reset }
 }

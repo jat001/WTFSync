@@ -15,7 +15,7 @@ function apply(theme: ThemeMode) {
  * Must be called once from the root component.
  */
 export function useTheme() {
-  const { settings, save } = useSettings()
+  const { settings } = useSettings()
 
   watch(() => settings.theme, apply, { immediate: true })
   media.addEventListener('change', () => apply(settings.theme))
@@ -24,11 +24,10 @@ export function useTheme() {
 
   const order: ThemeMode[] = ['light', 'dark', 'system']
 
-  // The sidebar toggle is a direct action, so persist it right away.
+  // The sidebar toggle flips the value; persistence is handled automatically.
   function cycleTheme() {
     const next = order[(order.indexOf(settings.theme) + 1) % order.length]
     settings.theme = next ?? 'system'
-    save()
   }
 
   return { theme, cycleTheme }
