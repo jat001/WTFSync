@@ -7,7 +7,7 @@ import { isTauri } from './tauri'
  *
  * Backed by a custom Tauri command instead of plugin-opener's `open_path`:
  * that IPC command is gated by a static capability scope and cannot allow
- * directories chosen at runtime (e.g. watch paths). The custom command
+ * directories chosen at runtime (e.g. the game directory). The custom command
  * only opens paths that exist and are directories.
  * Throws when the directory cannot be opened.
  */

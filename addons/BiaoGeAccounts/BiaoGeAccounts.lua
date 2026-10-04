@@ -54,7 +54,7 @@ f:SetScript("OnEvent", function(self, event, addonName)
                         end
                     end
                 elseif typeName == "realmName" then
-                    for realmID,realmName in pairs(_BiaoGeAccounts[i][typeName]) do
+                    for realmID, realmName in pairs(_BiaoGeAccounts[i][typeName]) do
                         BiaoGeAccounts[typeName][realmID] = realmName
                     end
                 else
@@ -69,7 +69,8 @@ f:SetScript("OnEvent", function(self, event, addonName)
                         end
                     end
                     if typeName == "playerInfo" then
-                        BiaoGeAccounts.accountName[_BiaoGeAccounts[i][typeName].accountName] = _BiaoGeAccounts[i][typeName]
+                        BiaoGeAccounts.accountName[_BiaoGeAccounts[i][typeName].accountName] = _BiaoGeAccounts[i]
+                            [typeName]
                     end
                 end
             end

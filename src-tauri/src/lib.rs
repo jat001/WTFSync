@@ -9,7 +9,7 @@ use tauri_plugin_prevent_default::{Flags, PlatformOptions};
 ///
 /// Unlike the opener plugin's `open_path` IPC command, this is not gated by the
 /// static capability scope (which can only list fixed paths), so directories
-/// chosen by the user at runtime (e.g. watch paths) can be opened. The path
+/// chosen by the user at runtime (e.g. the game directory) can be opened. The path
 /// must exist and be a directory.
 #[tauri::command]
 fn open_directory(app: tauri::AppHandle, path: String) -> Result<(), String> {
@@ -25,7 +25,7 @@ fn open_directory(app: tauri::AppHandle, path: String) -> Result<(), String> {
 /// Grant the fs plugin runtime access to the given directories.
 ///
 /// The fs plugin's capability scope can only list fixed paths, so directories
-/// chosen by the user at runtime (watch paths) are added here. `allow_directory`
+/// chosen by the user at runtime (the game directory) are added here. `allow_directory`
 /// registers glob patterns for the directory and, when `recursive`, everything
 /// under it; matching happens at access time, so files and subdirectories
 /// created later are covered automatically. Entries that fail (e.g. a path that

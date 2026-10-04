@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, type Component } from 'vue'
+import { computed, ref, watch, type Component } from 'vue'
 
 import pkg from '../package.json'
 import AppLogo from './components/AppLogo.vue'
-import WatchPathsModal from './components/WatchPathsModal.vue'
-import { useModal } from './composables/useModal'
-import type { ThemeMode } from './composables/useSettings'
-import { useSyncState } from './composables/useSyncState'
+import SyncReportModal from './components/SyncReportModal.vue'
+import { useModal, type ModalKind } from './composables/useModal'
+import { useSettings, type ThemeMode } from './composables/useSettings'
+import { useSync } from './composables/useSync'
 import { useTheme } from './composables/useTheme'
+import { summarizeReport, triggerLabels } from './lib/sync-text'
+import { formatTime } from './lib/time'
 import About from './pages/About.vue'
 import Home from './pages/Home.vue'
 import Setting from './pages/Setting.vue'
@@ -21,9 +23,81 @@ const pages: Record<PageKey, Component> = {
 }
 const current = ref<PageKey>('home')
 
-const { syncing, toggleSync, onlineDevices, storage, storagePercent } =
-  useSyncState()
+const toast = useToast()
+const { settings } = useSettings()
 const { theme, cycleTheme } = useTheme()
+const { running, lastActivity, watchedAccounts, gameDir } = useSync()
+const { currentModal, openModal, closeModal } = useModal()
+
+const lastSyncText = computed(() => {
+  const last = lastActivity.value
+  if (!last) return '本次启动后尚未同步'
+  return `${formatTime(last.at)} · ${last.error ? '同步失败' : summarizeReport(last.report!)}`
+})
+
+const watchState = computed(() => {
+  if (running.value) {
+    return {
+      dot: 'bg-primary',
+      tone: 'text-primary',
+      icon: 'i-lucide-refresh-cw',
+      text: '正在同步…',
+    }
+  }
+  if (!settings.autoSync) {
+    return {
+      dot: 'bg-warning',
+      tone: 'text-warning',
+      icon: 'i-lucide-pause',
+      text: '自动同步已关闭',
+    }
+  }
+  if (watchedAccounts.value === 0) {
+    return {
+      dot: 'bg-warning',
+      tone: 'text-warning',
+      icon: 'i-lucide-radar',
+      text: '没有监听中的账号',
+    }
+  }
+  return {
+    dot: 'bg-success',
+    tone: 'text-success',
+    icon: 'i-lucide-radar',
+    text: `监听 ${watchedAccounts.value} 个账号`,
+  }
+})
+
+const health = computed(() => {
+  const last = lastActivity.value
+  if (running.value) return { color: 'primary' as const, label: '同步中' }
+  if (last?.error) return { color: 'error' as const, label: '同步失败' }
+  if (last?.report?.failed.length) {
+    return { color: 'warning' as const, label: '部分失败' }
+  }
+  return { color: 'success' as const, label: '运行正常' }
+})
+
+// Manual syncs report through their own toast; surface background failures.
+watch(lastActivity, (entry) => {
+  if (!entry || entry.trigger === 'manual') return
+  const failed = entry.report?.failed.length ?? 0
+  if (entry.error === null && failed === 0) return
+  toast.add({
+    title: `${triggerLabels[entry.trigger]}${entry.error ? '失败' : '部分失败'}`,
+    description: entry.error ?? summarizeReport(entry.report!),
+    icon: 'i-lucide-circle-alert',
+    color: entry.error ? 'error' : 'warning',
+    actions: [
+      {
+        label: '查看详情',
+        color: 'neutral',
+        variant: 'outline',
+        onClick: () => openModal('sync-report'),
+      },
+    ],
+  })
+})
 
 const themeMeta: Record<ThemeMode, { icon: string; label: string }> = {
   light: { icon: 'i-lucide-sun', label: '浅色模式' },
@@ -33,7 +107,10 @@ const themeMeta: Record<ThemeMode, { icon: string; label: string }> = {
 const themeIcon = computed(() => themeMeta[theme.value].icon)
 const themeLabel = computed(() => themeMeta[theme.value].label)
 
-const { currentModal, closeModal } = useModal()
+const modalTitles: Record<ModalKind, string> = {
+  'sync-report': '同步详情',
+}
+
 const modalOpen = computed({
   get: () => currentModal.value !== null,
   set: (v: boolean) => {
@@ -50,24 +127,6 @@ const navItems = [
   { key: 'setting' as PageKey, label: '设置', icon: 'i-lucide-settings-2' },
   { key: 'about' as PageKey, label: '关于', icon: 'i-lucide-circle-help' },
 ]
-
-const pageOrder: PageKey[] = ['home', 'setting', 'about']
-
-// Global shortcuts: Ctrl+, opens settings, Ctrl+1/2/3 switches pages.
-function onKeydown(event: KeyboardEvent) {
-  if (!event.ctrlKey || event.shiftKey || event.altKey) return
-  if (event.key === ',') {
-    current.value = 'setting'
-  } else {
-    const index = Number.parseInt(event.key, 10) - 1
-    if (index < 0 || index >= pageOrder.length) return
-    current.value = pageOrder[index] ?? 'home'
-  }
-  event.preventDefault()
-}
-
-onMounted(() => window.addEventListener('keydown', onKeydown))
-onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
 function isActive(key: PageKey) {
   return current.value === key
@@ -92,7 +151,7 @@ function isActive(key: PageKey) {
               <p class="truncate text-[13px] font-semibold text-highlighted">
                 WTFSync
               </p>
-              <p class="truncate text-[11px] text-dimmed">文件同步工具</p>
+              <p class="truncate text-[11px] text-dimmed">插件数据同步</p>
             </div>
           </div>
 
@@ -119,27 +178,16 @@ function isActive(key: PageKey) {
 
           <div class="border-t border-default px-3 py-3">
             <div class="flex items-center justify-between text-xs">
-              <span class="text-muted">同步空间</span>
-              <span class="font-medium tabular-nums text-highlighted"
-                >{{ storagePercent }}%</span
-              >
+              <span class="text-muted">自动同步</span>
+              <USwitch
+                v-model="settings.autoSync"
+                size="sm"
+                aria-label="自动同步"
+              />
             </div>
-            <UProgress :model-value="storagePercent" size="sm" class="mt-1.5" />
-            <div class="mt-1.5 flex items-center justify-between">
-              <span class="text-[11px] tabular-nums text-dimmed"
-                >{{ storage.used }} / {{ storage.total }} GB</span
-              >
-              <UTooltip :text="syncing ? '暂停同步' : '继续同步'">
-                <UButton
-                  :icon="syncing ? 'i-lucide-pause' : 'i-lucide-play'"
-                  color="neutral"
-                  variant="ghost"
-                  size="xs"
-                  :aria-label="syncing ? '暂停同步' : '继续同步'"
-                  @click="toggleSync"
-                />
-              </UTooltip>
-            </div>
+            <p class="mt-1.5 truncate text-[11px] text-dimmed" :title="lastSyncText">
+              {{ lastSyncText }}
+            </p>
           </div>
 
           <div
@@ -147,10 +195,10 @@ function isActive(key: PageKey) {
           >
             <span
               class="size-1.5 shrink-0 rounded-full"
-              :class="syncing ? 'bg-success' : 'bg-warning'"
+              :class="watchState.dot"
             />
             <span class="truncate text-[11px] text-muted">
-              {{ syncing ? '已连接 · 同步中' : '同步已暂停' }}
+              {{ watchState.text }}
             </span>
             <span class="ml-auto flex shrink-0 items-center gap-0.5">
               <UTooltip :text="`主题：${themeLabel}`">
@@ -181,32 +229,35 @@ function isActive(key: PageKey) {
         class="flex h-7 shrink-0 items-center gap-2 border-t border-default bg-muted px-3 text-[11px] text-muted"
       >
         <UIcon
-          name="i-lucide-wifi"
+          :name="watchState.icon"
           class="size-3.5 shrink-0"
-          :class="syncing ? 'text-success' : 'text-warning'"
+          :class="watchState.tone"
         />
-        <span>{{ syncing ? '已连接 · 局域网' : '已暂停' }}</span>
+        <span class="shrink-0">{{ watchState.text }}</span>
         <span class="flex h-3 items-center">
           <USeparator orientation="vertical" />
         </span>
-        <span>{{ onlineDevices.length }} 台设备在线</span>
+        <span class="min-w-0 truncate">上次同步：{{ lastSyncText }}</span>
         <span class="flex-1" />
-        <template v-if="syncing">
-          <span class="tabular-nums">↑ 1.2 MB/s</span>
-          <span class="tabular-nums">↓ 3.4 KB/s</span>
-        </template>
-        <span v-else class="tabular-nums">传输已挂起</span>
+        <span class="min-w-0 truncate" :title="gameDir">{{
+          settings.flavor || '未设置游戏目录'
+        }}</span>
         <span class="flex h-3 items-center">
           <USeparator orientation="vertical" />
         </span>
-        <UBadge color="success" variant="subtle" size="sm">运行正常</UBadge>
+        <UBadge :color="health.color" variant="subtle" size="sm">{{
+          health.label
+        }}</UBadge>
       </footer>
     </div>
 
     <!-- Global modal -->
-    <UModal v-model:open="modalOpen" title="示例配置">
+    <UModal
+      v-model:open="modalOpen"
+      :title="currentModal ? modalTitles[currentModal] : ''"
+    >
       <template #body>
-        <WatchPathsModal v-if="currentModal === 'watch-paths'" />
+        <SyncReportModal v-if="currentModal === 'sync-report'" />
       </template>
     </UModal>
   </UApp>

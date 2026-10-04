@@ -2,9 +2,9 @@ import { ref } from 'vue'
 
 /**
  * Global modal types. Register a new key here when adding a modal.
- * Example: export type ModalKind = 'watch-paths' | 'some-other'
+ * Example: export type ModalKind = 'sync-report' | 'some-other'
  */
-export type ModalKind = 'watch-paths'
+export type ModalKind = 'sync-report'
 
 // Module-level singleton: every useModal() call shares the same state.
 const currentModal = ref<ModalKind | null>(null)

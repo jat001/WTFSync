@@ -5,8 +5,8 @@ import { isTauri } from './tauri'
 /**
  * Grant the fs plugin runtime access to the given directories (recursive).
  *
- * The fs capability scope can only whitelist fixed paths, so watch paths
- * chosen by the user are authorized at runtime on the backend, where globs are
+ * The fs capability scope can only whitelist fixed paths, so the game directory
+ * chosen by the user is authorized at runtime on the backend, where globs are
  * matched at access time — files and subdirectories created later are covered.
  * Returns the list of paths that failed to authorize (empty on full success).
  */

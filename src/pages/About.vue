@@ -3,9 +3,11 @@ import pkg from '../../package.json'
 import AppLogo from '../components/AppLogo.vue'
 import { openLogDir } from '../lib/logs'
 import { isTauri } from '../lib/tauri'
+import { profiles } from '../profiles'
 
 const toast = useToast()
 const version = pkg.version
+const supportedAddons = profiles.map((profile) => profile.name).join('、')
 
 const infoRows = [
   { label: '构建日期', value: '2026-08-28' },
@@ -52,15 +54,17 @@ async function openLogs() {
         <UBadge color="neutral" variant="subtle" size="sm" class="mt-1.5">
           版本 {{ version }}
         </UBadge>
-        <p class="mt-3 text-sm text-muted">简单，可靠，始终同步。</p>
+        <p class="mt-3 text-sm text-muted">
+          在多个魔兽世界账号之间同步插件数据。
+        </p>
       </div>
 
       <UAlert
-        color="success"
+        color="neutral"
         variant="subtle"
-        icon="i-lucide-circle-check"
-        title="已是最新版本"
-        description="跨设备同步服务运行正常"
+        icon="i-lucide-puzzle"
+        title="支持的插件"
+        :description="supportedAddons"
         class="mx-6 w-auto"
       />
 
@@ -94,22 +98,6 @@ async function openLogs() {
           size="sm"
           @click="openLogs"
         />
-      </div>
-
-      <!-- Keyboard shortcuts -->
-      <div
-        class="flex flex-wrap items-center justify-center gap-1.5 px-6 pb-6 text-[11px] text-dimmed"
-      >
-        <span>快捷键</span>
-        <UKbd size="sm">Ctrl</UKbd>
-        <span>+</span>
-        <UKbd size="sm">,</UKbd>
-        <span>打开设置</span>
-        <span class="mx-1">·</span>
-        <UKbd size="sm">Ctrl</UKbd>
-        <span>+</span>
-        <UKbd size="sm">1~3</UKbd>
-        <span>切换页面</span>
       </div>
     </UCard>
   </div>

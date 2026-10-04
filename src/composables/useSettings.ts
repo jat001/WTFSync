@@ -12,28 +12,17 @@ import { isTauri } from '../lib/tauri'
  * Stored values are English; Chinese labels live in the UI layer only.
  */
 export const settingsSchema = z.object({
-  // General
   theme: z.enum(['light', 'dark', 'system']).catch('system'),
-  launchAtStartup: z.boolean().catch(true),
-  minimizeToTray: z.boolean().catch(true),
+  // WoW install root, e.g. "D:\Games\World of Warcraft". fs access is
+  // granted to it at runtime.
+  wowRoot: z.string().catch(''),
+  // Flavor directory under the root, e.g. "_classic_titan_".
+  flavor: z.string().catch(''),
+  // Resync whenever a selected account's SavedVariables change.
   autoSync: z.boolean().catch(true),
-  // Sync
-  frequency: z.enum(['realtime', '5min', '30min', 'hourly']).catch('realtime'),
-  conflict: z
-    .enum(['keep-both', 'local-wins', 'remote-wins'])
-    .catch('keep-both'),
-  bandwidth: z.number().catch(20),
-  // Network
-  wifiOnly: z.boolean().catch(false),
-  protocol: z.enum(['auto', 'encrypted', 'relay']).catch('auto'),
-  proxy: z.string().catch(''),
-  // Notification
-  notifyDone: z.boolean().catch(true),
-  notifyConflict: z.boolean().catch(true),
-  notifyError: z.boolean().catch(true),
-  sound: z.enum(['system', 'chime', 'none']).catch('system'),
-  // Folders watched for sync; fs access is granted to them at runtime.
-  watchPaths: z.array(z.string()).catch([]),
+  // Selected accounts keyed by `${flavor}/${profileId}`. A missing key means
+  // the user never chose, so a previous tool's selection may be imported.
+  selections: z.record(z.string(), z.array(z.string())).catch({}),
 })
 
 export type Settings = z.infer<typeof settingsSchema>
@@ -85,7 +74,7 @@ async function writePersisted(value: Settings): Promise<void> {
 const settings = reactive<Settings>({ ...defaultSettings })
 let hydrated = false
 
-// Coalesce rapid edits (e.g. dragging the bandwidth slider) into one write.
+// Coalesce rapid edits (e.g. ticking several accounts) into one write.
 let writeTimer: ReturnType<typeof setTimeout> | undefined
 function schedulePersist() {
   if (!hydrated) return
@@ -102,11 +91,11 @@ watch(settings, schedulePersist, { deep: true })
 export const settingsReady: Promise<void> = (async () => {
   Object.assign(settings, await readPersisted())
   hydrated = true
-  // Grant fs access to persisted watch directories on launch. Globs are
+  // Grant fs access to the persisted game directory on launch. Globs are
   // matched at access time on the backend, so subdirectories and files
   // created later are covered without re-authorizing.
-  if (isTauri) {
-    await allowFsDirectories([...settings.watchPaths])
+  if (isTauri && settings.wowRoot) {
+    await allowFsDirectories([settings.wowRoot])
   }
 })()
 

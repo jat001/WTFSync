@@ -1,10 +1,10 @@
 
-## Interface: 11508,11509,20506,20507,30405,38001,38002,40402,50504,50505,50506,120000,120005,120007
+## Interface: {{INTERFACE}}
 ## Title: <BiaoGeAccounts> |cff00BFFF同步模块|r
-## Notes: 该模块由BiaoGeUpdater生成，使BiaoGe的角色总览可以显示全战网全账号角色。
+## Notes: 该模块由WTFSync生成，使BiaoGe的角色总览可以显示全战网全账号角色。
 ## IconTexture: Interface\AddOns\BiaoGe\Media\icon\icon.tga
-## Author: 苍穹之霜
+## Author: WTFSync
 ## RequiredDeps: BiaoGe
-## Version: 2.1.0
+## Version: 3.0.0
 
 BiaoGeAccounts.lua
