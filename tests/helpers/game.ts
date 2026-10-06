@@ -1,5 +1,5 @@
-import type { MemoryFileSystem } from '../core/memory-fs'
-import { joinPath } from '../core/paths'
+import type { MemoryFileSystem } from './memory-fs'
+import { joinPath } from '../../src/core/paths'
 
 /** Install root of the fake game used by tests. */
 export const TEST_ROOT = 'C:\\WoW'

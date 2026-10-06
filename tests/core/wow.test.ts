@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildInfoText, createGame, TEST_ROOT } from '../testing/game'
-import { MemoryFileSystem } from './memory-fs'
+import { buildInfoText, createGame, TEST_ROOT } from '../helpers/game'
+import { MemoryFileSystem } from '../helpers/memory-fs'
 import {
   interfaceFromVersion,
   listFlavors,
   readBuildInfo,
   readClientInfo,
   resolveGameDir,
-} from './wow'
+} from '../../src/core/wow'
 
 describe('interfaceFromVersion', () => {
   it('packs major, minor and patch', () => {

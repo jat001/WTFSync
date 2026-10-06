@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { fillTemplate } from './template'
+import { fillTemplate } from '../../src/core/template'
 
 describe('fillTemplate', () => {
   it('replaces placeholders and rejects unknown ones', () => {

@@ -1,13 +1,13 @@
-import { quoteLuaString } from '../../core/lua/string'
+import { quoteLuaString } from '../../src/core/lua/string'
 import {
   formatField,
   formatSavedVariables,
   table,
   type LuaKeyLiteral,
   type LuaValue,
-} from '../../testing/lua-writer'
-import { createRandom, type Random } from '../../testing/random'
-import { EXPORT_KEYS } from '.'
+} from './lua-writer'
+import { createRandom, type Random } from './random'
+import { EXPORT_KEYS } from '../../src/profiles/biaoge/index'
 
 /**
  * Generates BiaoGe.lua files with made-up accounts and characters, shaped

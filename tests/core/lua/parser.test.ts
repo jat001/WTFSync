@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatSavedVariables, formatValue, table } from '../../testing/lua-writer'
-import { encodeUtf8 } from '../text'
+import { formatSavedVariables, formatValue, table } from '../../helpers/lua-writer'
+import { encodeUtf8 } from '../../../src/core/text'
 import {
   asNumber,
   asString,
@@ -10,9 +10,9 @@ import {
   LuaParseError,
   sourceText,
   valueOf,
-} from './ast'
-import { parseSavedVariables } from './parser'
-import { quoteLuaString } from './string'
+} from '../../../src/core/lua/ast'
+import { parseSavedVariables } from '../../../src/core/lua/parser'
+import { quoteLuaString } from '../../../src/core/lua/string'
 
 const TRICKY = '{开头}，"引号" \\ 反斜杠\n换行}'
 

@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest'
 
 import loaderTemplate from '../../../addons/BiaoGeAccounts/BiaoGeAccounts.lua?raw'
 import tocTemplate from '../../../addons/BiaoGeAccounts/BiaoGeAccounts.toc?raw'
-import { runSync } from '../../core/engine'
-import { parseSavedVariables } from '../../core/lua/parser'
-import { MemoryFileSystem } from '../../core/memory-fs'
-import type { AccountSource } from '../../core/profile'
-import { toCrlf } from '../../core/text'
-import { createGame, savedVariablesPath } from '../../testing/game'
-import { biaoge, EXPORT_KEYS, parseLoaderKeys, renderToc } from '.'
-import { expectedAccountFile, generateAccount } from './testing'
+import { runSync } from '../../../src/core/engine'
+import { parseSavedVariables } from '../../../src/core/lua/parser'
+import { MemoryFileSystem } from '../../helpers/memory-fs'
+import type { AccountSource } from '../../../src/core/profile'
+import { toCrlf } from '../../../src/core/text'
+import { createGame, savedVariablesPath } from '../../helpers/game'
+import { biaoge, EXPORT_KEYS, parseLoaderKeys, renderToc } from '../../../src/profiles/biaoge/index'
+import { expectedAccountFile, generateAccount } from '../../helpers/biaoge'
 
 const CLIENT = { version: '3.80.2.12345', interfaceVersion: 38002 }
 

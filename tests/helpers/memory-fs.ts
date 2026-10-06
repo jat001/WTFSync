@@ -1,5 +1,5 @@
-import type { DirEntry, FileStat, FileSystem } from './fs'
-import { decodeUtf8, encodeUtf8 } from './text'
+import type { DirEntry, FileStat, FileSystem } from '../../src/core/fs'
+import { decodeUtf8, encodeUtf8 } from '../../src/core/text'
 
 interface Watcher {
   dirs: Set<string>

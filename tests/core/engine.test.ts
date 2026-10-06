@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { createGame, TEST_ROOT } from '../testing/game'
-import { scanAccounts } from './accounts'
+import { createGame, TEST_ROOT } from '../helpers/game'
+import { scanAccounts } from '../../src/core/accounts'
 import {
   createSyncQueue,
   runSync,
@@ -9,10 +9,10 @@ import {
   type SyncReport,
   type SyncTask,
   type SyncTrigger,
-} from './engine'
-import { asString, valueOf } from './lua/ast'
-import { MemoryFileSystem } from './memory-fs'
-import { ProfileDataError, type AddonProfile, type RenderInput } from './profile'
+} from '../../src/core/engine'
+import { asString, valueOf } from '../../src/core/lua/ast'
+import { MemoryFileSystem } from '../helpers/memory-fs'
+import { ProfileDataError, type AddonProfile, type RenderInput } from '../../src/core/profile'
 
 const GAME = `${TEST_ROOT}\\_retail_`
 const OUT = `${GAME}\\Interface\\AddOns\\EchoAccounts`

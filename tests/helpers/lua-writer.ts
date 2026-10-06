@@ -1,4 +1,4 @@
-import { quoteLuaString } from '../core/lua/string'
+import { quoteLuaString } from '../../src/core/lua/string'
 
 /**
  * Writes Lua values the way WoW serializes SavedVariables, to build test

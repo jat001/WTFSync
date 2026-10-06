@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { basename, dirname, isInside, isSafeFileName, joinPath } from './paths'
+import { basename, dirname, isInside, isSafeFileName, joinPath } from '../../src/core/paths'
 
 describe('paths', () => {
   it('joins with the base path style', () => {

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import type { SyncTask } from './engine'
-import { MemoryFileSystem } from './memory-fs'
-import type { AddonProfile } from './profile'
-import { watchSources } from './watcher'
+import type { SyncTask } from '../../src/core/engine'
+import { MemoryFileSystem } from '../helpers/memory-fs'
+import type { AddonProfile } from '../../src/core/profile'
+import { watchSources } from '../../src/core/watcher'
 
 const GAME = 'C:\\WoW\\_retail_'
 
