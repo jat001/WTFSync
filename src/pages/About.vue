@@ -1,5 +1,9 @@
 <script setup lang="ts">
+import { openUrl } from '@tauri-apps/plugin-opener'
+import { ref } from 'vue'
+
 import pkg from '../../package.json'
+import privacyPolicy from '../assets/privacy-policy.txt?raw'
 import AppLogo from '../components/AppLogo.vue'
 import { openLogDir } from '../lib/logs'
 import { isTauri } from '../lib/tauri'
@@ -7,21 +11,25 @@ import { profiles } from '../profiles'
 
 const toast = useToast()
 const version = pkg.version
+const privacyOpen = ref(false)
 const supportedAddons = profiles.map((profile) => profile.name).join('、')
 
 const infoRows = [
-  { label: '构建日期', value: '2026-08-28' },
   { label: '界面引擎', value: 'Tauri 2 · Vue 3' },
   { label: '开源许可', value: '公共领域 (Unlicense)' },
 ]
 
-function checkUpdate() {
-  toast.add({
-    title: '已是最新版本',
-    description: `版本 ${version} 已通过更新检查`,
-    icon: 'i-lucide-circle-check',
-    color: 'success',
-  })
+async function openStore() {
+  try {
+    await openUrl('https://apps.microsoft.com/detail/9NTVMTNGV9SL')
+  } catch {
+    toast.add({
+      title: '无法打开商店页面',
+      description: '请稍后重试，或在 Microsoft Store 中搜索 WTFSync',
+      icon: 'i-lucide-circle-alert',
+      color: 'error',
+    })
+  }
 }
 
 async function openLogs() {
@@ -81,14 +89,22 @@ async function openLogs() {
       </dl>
 
       <!-- Actions -->
-      <div class="flex justify-center gap-2 border-t border-default px-6 py-5">
+      <div class="flex flex-wrap justify-center gap-2 border-t border-default px-6 py-5">
         <UButton
-          label="检查更新"
-          icon="i-lucide-rotate-cw"
+          label="Microsoft Store"
+          icon="i-lucide-external-link"
           color="neutral"
           variant="outline"
           size="sm"
-          @click="checkUpdate"
+          @click="openStore"
+        />
+        <UButton
+          label="隐私政策"
+          icon="i-lucide-shield-check"
+          color="neutral"
+          variant="outline"
+          size="sm"
+          @click="privacyOpen = true"
         />
         <UButton
           label="打开日志目录"
@@ -100,5 +116,15 @@ async function openLogs() {
         />
       </div>
     </UCard>
+    <UModal v-model:open="privacyOpen" title="隐私政策" :ui="{ content: 'max-w-2xl' }">
+      <template #body>
+        <p class="whitespace-pre-wrap text-sm leading-relaxed text-default">{{ privacyPolicy }}</p>
+      </template>
+      <template #footer>
+        <div class="flex w-full justify-end">
+          <UButton label="关闭" color="neutral" variant="outline" @click="privacyOpen = false" />
+        </div>
+      </template>
+    </UModal>
   </div>
 </template>

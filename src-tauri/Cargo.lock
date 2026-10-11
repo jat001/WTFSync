@@ -5022,6 +5022,7 @@ dependencies = [
 name = "wtfsync"
 version = "0.1.0"
 dependencies = [
+ "rfd",
  "serde",
  "serde_json",
  "tauri",

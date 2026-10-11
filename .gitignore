@@ -29,3 +29,8 @@ auto-imports.d.ts
 components.d.ts
 
 docs/
+
+# Store packaging outputs and local signing material
+artifacts/
+*.pfx
+*.cer

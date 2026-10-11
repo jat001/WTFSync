@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
+    "build": "vite build && vue-tsc --noEmit",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "pack:msix": "pwsh -NoProfile -File scripts/package-msix.ps1",
+    "store:sample": "node scripts/create-store-sample.mjs"
   },
   "dependencies": {
     "@nuxt/ui": "^4.11.3",

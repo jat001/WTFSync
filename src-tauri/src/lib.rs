@@ -35,9 +35,7 @@ fn grant_fs_directories(app: tauri::AppHandle, paths: Vec<String>) -> Vec<String
     let scope = app.fs_scope();
     let mut failed = Vec::new();
     for path in paths {
-        if scope.is_allowed(&path) {
-            continue;
-        }
+        // A picker may allow only this directory. Always add recursive access.
         if scope.allow_directory(&path, true).is_err() {
             failed.push(path);
         }
@@ -45,8 +43,37 @@ fn grant_fs_directories(app: tauri::AppHandle, paths: Vec<String>) -> Vec<String
     failed
 }
 
+/// Report a missing WebView2 runtime before any webview or sync is created.
+#[cfg(target_os = "windows")]
+fn require_webview_runtime() -> bool {
+    if tauri::webview_version().is_ok() {
+        return true;
+    }
+    let result = rfd::MessageDialog::new()
+        .set_title("需要 Microsoft Edge WebView2")
+        .set_description("WTFSync 需要 Microsoft Edge WebView2 运行时。请从微软官方网站安装后重新打开应用。\n\n选择“打开官方下载页面”前往微软网站；选择“退出”关闭应用。")
+        .set_level(rfd::MessageLevel::Error)
+        .set_buttons(rfd::MessageButtons::OkCancelCustom(
+            "打开官方下载页面".into(),
+            "退出".into(),
+        ))
+        .show();
+    if result == rfd::MessageDialogResult::Custom("打开官方下载页面".into()) {
+        let _ = tauri_plugin_opener::open_url(
+            "https://developer.microsoft.com/microsoft-edge/webview2/",
+            None::<&str>,
+        );
+    }
+    false
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[cfg(target_os = "windows")]
+    if !require_webview_runtime() {
+        return;
+    }
+
     tauri::Builder::default()
         // Keep first so duplicate instances exit as early as possible.
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
