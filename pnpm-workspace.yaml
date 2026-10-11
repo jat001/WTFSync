@@ -1,4 +1,6 @@
 dangerouslyAllowAllBuilds: true
 minimumReleaseAge: 0
 overrides:
-  typescript: npm:typescript-native-bridge@6.0.3-bridge.17.tsgo.7.0.2
+  typescript: npm:typescript-native-bridge@6.0.3-bridge.18.tsgo.7.0.2
+  # @unhead/bundler still requests 0.27; use the patched Windows dev server.
+  esbuild: ^0.28.2

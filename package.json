@@ -14,10 +14,10 @@
   },
   "dependencies": {
     "@nuxt/ui": "^4.11.3",
-    "@tauri-apps/api": "^2.12.1",
-    "@tauri-apps/plugin-dialog": "^2.8.1",
-    "@tauri-apps/plugin-fs": "^2.6.0",
-    "@tauri-apps/plugin-opener": "^2.7.0",
+    "@tauri-apps/api": "^2.12.3",
+    "@tauri-apps/plugin-dialog": "^2.8.2",
+    "@tauri-apps/plugin-fs": "^2.7.0",
+    "@tauri-apps/plugin-opener": "^2.7.1",
     "@tauri-apps/plugin-store": "^2.5.0",
     "luaparse": "^0.3.1",
     "tailwindcss": "^4.3.3",
@@ -26,14 +26,14 @@
   },
   "devDependencies": {
     "@microsoft/winappcli": "^0.7.1",
-    "@tauri-apps/cli": "^2.12.1",
+    "@tauri-apps/cli": "^2.12.2",
     "@types/luaparse": "^0.2.13",
-    "@vitejs/plugin-vue": "^6.0.9",
+    "@vitejs/plugin-vue": "^6.0.10",
     "typescript": "^7.0.2",
-    "vite": "^8.3.2",
+    "vite": "^8.3.4",
     "vite-plugin-vue-devtools": "^8.2.1",
     "vitest": "^5.0.3",
-    "vue-tsc": "^3.3.12"
+    "vue-tsc": "^3.3.13"
   },
   "engines": {
     "node": ">=24.0.0"
