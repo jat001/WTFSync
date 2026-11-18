@@ -13,36 +13,30 @@
     "store:sample": "node scripts/create-store-sample.mjs"
   },
   "dependencies": {
-    "@nuxt/ui": "^4.11.3",
-    "@tauri-apps/api": "^2.12.3",
-    "@tauri-apps/plugin-dialog": "^2.8.2",
-    "@tauri-apps/plugin-fs": "^2.7.0",
-    "@tauri-apps/plugin-opener": "^2.7.1",
-    "@tauri-apps/plugin-store": "^2.5.0",
+    "@nuxt/ui": "^4.12.2",
+    "@tauri-apps/api": "^2.12.5",
+    "@tauri-apps/plugin-dialog": "^2.8.4",
+    "@tauri-apps/plugin-fs": "^2.7.1",
+    "@tauri-apps/plugin-opener": "^2.7.3",
+    "@tauri-apps/plugin-store": "^2.5.1",
     "luaparse": "^0.3.1",
-    "tailwindcss": "^4.3.3",
-    "vue": "^3.5.43",
-    "zod": "^4.6.5"
+    "tailwindcss": "^4.3.5",
+    "vue": "^3.5.45",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@microsoft/winappcli": "^0.7.1",
-    "@tauri-apps/cli": "^2.12.2",
+    "@microsoft/winappcli": "^0.8.0",
+    "@tauri-apps/cli": "^2.12.5",
     "@types/luaparse": "^0.2.13",
-    "@vitejs/plugin-vue": "^6.0.10",
+    "@vitejs/plugin-vue": "^6.0.11",
     "typescript": "^7.0.2",
-    "vite": "^8.3.4",
+    "vite": "^8.3.8",
     "vite-plugin-vue-devtools": "^8.2.1",
-    "vitest": "^5.0.3",
-    "vue-tsc": "^3.3.13"
+    "vitest": "^5.1.1",
+    "vue-tsc": "^3.3.14"
   },
   "engines": {
-    "node": ">=24.0.0"
-  },
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": ">=12.0.0 <13.0.0",
-      "onFail": "download"
-    }
+    "node": "26.x",
+    "pnpm": "12.x"
   }
 }
