@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 
 import type { SyncTask } from '../../src/core/engine'
 import { MemoryFileSystem } from '../helpers/memory-fs'

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 
 import { buildInfoText, createGame, TEST_ROOT } from '../helpers/game'
 import { MemoryFileSystem } from '../helpers/memory-fs'

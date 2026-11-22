@@ -1,14 +1,14 @@
 {
   "name": "wtfsync",
-  "private": true,
   "version": "0.1.0",
+  "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build && vue-tsc --noEmit",
-    "preview": "vite preview",
+    "dev": "vp dev",
+    "build": "vp build && vue-tsc --noEmit",
+    "preview": "vp preview",
     "typecheck": "vue-tsc --noEmit",
-    "test": "vitest run",
+    "test": "vp test run",
     "pack:msix": "pwsh -NoProfile -File scripts/package-msix.ps1",
     "store:sample": "node scripts/create-store-sample.mjs"
   },
@@ -29,10 +29,11 @@
     "@tauri-apps/cli": "^2.12.5",
     "@types/luaparse": "^0.2.13",
     "@vitejs/plugin-vue": "^6.0.11",
-    "typescript": "^7.0.2",
-    "vite": "^8.3.8",
+    "typescript": "catalog:",
+    "vite": "catalog:",
     "vite-plugin-vue-devtools": "^8.2.1",
-    "vitest": "^5.1.1",
+    "vite-plus": "catalog:",
+    "vitest": "catalog:",
     "vue-tsc": "^3.3.14"
   },
   "engines": {

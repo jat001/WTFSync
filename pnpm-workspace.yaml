@@ -1,6 +1,13 @@
 dangerouslyAllowAllBuilds: true
 minimumReleaseAge: 0
 overrides:
-  typescript: npm:typescript-native-bridge@6.0.3-bridge.19.tsgo.7.0.2
+  typescript: "catalog:"
   # fontless still requests esbuild 0.27; keep the Windows dev server on 0.28.
   fontless>esbuild: ^0.28.2
+  vite@*: "catalog:"
+  vitest@*: "catalog:"
+catalog:
+  typescript: npm:typescript-native-bridge@6.0.3-bridge.19.tsgo.7.0.2
+  vite: npm:@voidzero-dev/vite-plus-core@8.3.8000
+  vitest: 5.1.0
+  vite-plus: 1.7.0

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 
 import { createGame, TEST_ROOT } from '../helpers/game'
 import { scanAccounts } from '../../src/core/accounts'

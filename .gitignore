@@ -34,3 +34,4 @@ docs/
 artifacts/
 *.pfx
 *.cer
+.vitest/

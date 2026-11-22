@@ -1,14 +1,15 @@
 import ui from '@nuxt/ui/vite'
 import vue from '@vitejs/plugin-vue'
-import { defineConfig } from 'vite'
+import { defineConfig, lazyPlugins } from 'vite-plus'
 import vueDevTools from 'vite-plugin-vue-devtools'
 // @ts-expect-error type error without @types/node package
 import process from 'node:process'
 const host = process.env.TAURI_DEV_HOST
 
 // https://vite.dev/config/
-export default defineConfig(() => ({
-  plugins: [vue(), ui({ router: false }), vueDevTools()],
+export default defineConfig({
+  // Node tests do not need the application's Vue and UI plugins.
+  plugins: process.env.VITEST ? [] : lazyPlugins(() => [vue(), ui({ router: false }), vueDevTools()]),
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
@@ -31,4 +32,22 @@ export default defineConfig(() => ({
       ignored: ['**/src-tauri/**'],
     },
   },
-}))
+  test: {
+    include: ['tests/**/*.test.ts'],
+    environment: 'node',
+  },
+  check: {
+    // Formatting is opt-in for this repository.
+    fmt: false,
+  },
+  fmt: {
+    semi: false,
+    singleQuote: true,
+  },
+  lint: {
+    options: {
+      typeAware: true,
+      typeCheck: true,
+    },
+  },
+})

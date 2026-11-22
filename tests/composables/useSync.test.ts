@@ -1,4 +1,4 @@
-import { expect, it, vi } from 'vitest'
+import { expect, it, vi } from 'vite-plus/test'
 
 import { joinPath } from '../../src/core/paths'
 import { createGame, savedVariablesPath, TEST_ROOT } from '../helpers/game'
