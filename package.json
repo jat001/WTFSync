@@ -13,7 +13,7 @@
     "store:sample": "node scripts/create-store-sample.mjs"
   },
   "dependencies": {
-    "@nuxt/ui": "^4.12.2",
+    "@nuxt/ui": "^4.13.0",
     "@tauri-apps/api": "^2.12.5",
     "@tauri-apps/plugin-dialog": "^2.8.4",
     "@tauri-apps/plugin-fs": "^2.7.1",
@@ -21,12 +21,12 @@
     "@tauri-apps/plugin-store": "^2.5.1",
     "luaparse": "^0.3.1",
     "tailwindcss": "^4.3.5",
-    "vue": "^3.5.45",
+    "vue": "^3.5.46",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@microsoft/winappcli": "^0.8.0",
-    "@tauri-apps/cli": "^2.12.5",
+    "@tauri-apps/cli": "^2.12.6",
     "@types/luaparse": "^0.2.13",
     "@vitejs/plugin-vue": "^6.0.11",
     "typescript": "catalog:",

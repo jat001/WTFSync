@@ -2,8 +2,6 @@ dangerouslyAllowAllBuilds: true
 minimumReleaseAge: 0
 overrides:
   typescript: "catalog:"
-  # fontless still requests esbuild 0.27; keep the Windows dev server on 0.28.
-  fontless>esbuild: ^0.28.2
   vite@*: "catalog:"
   vitest@*: "catalog:"
 catalog:
