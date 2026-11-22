@@ -26,10 +26,15 @@ jobs:
           node-version: 26
 
       - run: pnpm install --frozen-lockfile
+        env:
+          VP_GIT_HOOKS: '0'
 
       # Also generates the auto-import declarations the type check needs.
       - name: Build frontend
         run: pnpm exec vp build
+
+      - name: Check formatting and lint
+        run: pnpm exec vp check --deny-warnings
 
       - run: pnpm typecheck
 
