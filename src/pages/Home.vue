@@ -40,9 +40,7 @@ const {
 
 // Profiles become tabs once there is more than one.
 const profile = shallowRef<AddonProfile>(defaultProfile)
-const profileTabs = computed(() =>
-  profiles.map((p) => ({ label: p.name, value: p.id })),
-)
+const profileTabs = computed(() => profiles.map((p) => ({ label: p.name, value: p.id })))
 const profileId = computed({
   get: () => profile.value.id,
   set: (id: string) => {
@@ -65,11 +63,7 @@ const outOfDate = computed(() => {
 })
 
 const canSync = computed(
-  () =>
-    isTauri &&
-    !!gameDir.value &&
-    !running.value &&
-    canSyncProfile(profile.value),
+  () => isTauri && !!gameDir.value && !running.value && canSyncProfile(profile.value),
 )
 
 const stats = computed(() => {
@@ -94,9 +88,7 @@ const stats = computed(() => {
       label: '上次同步',
       value: last ? formatTime(last.at) : '—',
       icon: 'i-lucide-history',
-      hint: last
-        ? (last.error ?? summarizeReport(last.report!))
-        : '本次启动后尚未同步',
+      hint: last ? (last.error ?? summarizeReport(last.report!)) : '本次启动后尚未同步',
     },
     {
       label: '自动同步',
@@ -189,9 +181,7 @@ async function openOutputDir() {
     <!-- Toolbar -->
     <div class="flex items-center justify-between gap-3">
       <div class="min-w-0">
-        <h1 class="truncate text-base font-semibold text-highlighted">
-          工作台
-        </h1>
+        <h1 class="truncate text-base font-semibold text-highlighted">工作台</h1>
         <p class="truncate text-[11px] text-muted select-text">
           {{ gameDir || '尚未设置游戏目录' }}
         </p>
@@ -270,12 +260,7 @@ async function openOutputDir() {
 
       <!-- Stats -->
       <div class="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <UCard
-          v-for="stat in stats"
-          :key="stat.label"
-          variant="soft"
-          class="ring-0"
-        >
+        <UCard v-for="stat in stats" :key="stat.label" variant="soft" class="ring-0">
           <div class="flex items-center justify-between">
             <span class="text-xs text-muted">{{ stat.label }}</span>
             <UIcon :name="stat.icon" class="size-4 text-dimmed" />
@@ -295,9 +280,7 @@ async function openOutputDir() {
           <div class="flex items-center justify-between gap-2 px-4 py-3">
             <div class="flex items-center gap-2">
               <h2 class="text-sm font-semibold text-highlighted">账号</h2>
-              <UBadge color="primary" variant="subtle" size="sm">
-                已选 {{ selected.size }}
-              </UBadge>
+              <UBadge color="primary" variant="subtle" size="sm"> 已选 {{ selected.size }} </UBadge>
             </div>
             <div class="flex items-center">
               <UTooltip text="打开插件目录">
@@ -362,12 +345,7 @@ async function openOutputDir() {
             />
           </div>
           <div class="px-4 pb-4">
-            <UTimeline
-              v-if="timeline.length"
-              :items="timeline"
-              size="sm"
-              color="primary"
-            />
+            <UTimeline v-if="timeline.length" :items="timeline" size="sm" color="primary" />
             <UEmpty
               v-else
               icon="i-lucide-history"

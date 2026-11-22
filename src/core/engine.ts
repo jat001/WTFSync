@@ -68,10 +68,7 @@ export function outputDirOf(gameDir: string, profile: AddonProfile): string {
 }
 
 /** Contents of every file in an output directory, skipping temp files. */
-async function readOutputDir(
-  fs: FileSystem,
-  dir: string,
-): Promise<Map<string, Uint8Array>> {
+async function readOutputDir(fs: FileSystem, dir: string): Promise<Map<string, Uint8Array>> {
   const files = new Map<string, Uint8Array>()
   if (!(await isDirectory(fs, dir))) return files
   for (const entry of await fs.readDir(dir)) {
@@ -154,10 +151,7 @@ export async function runSync(
     throw new SyncError('game-dir-missing', `game directory not found: ${gameDir}`)
   }
   if (!(await isDirectory(fs, addonDir(gameDir, profile.requiredAddon)))) {
-    throw new SyncError(
-      'required-addon-missing',
-      `${profile.requiredAddon} is not installed`,
-    )
+    throw new SyncError('required-addon-missing', `${profile.requiredAddon} is not installed`)
   }
   const outputDir = outputDirOf(gameDir, profile)
   if (!isInside(gameDir, outputDir)) {
@@ -176,13 +170,7 @@ export async function runSync(
   const failed: AccountFailure[] = []
   for (const id of [...new Set(task.accounts)].sort()) {
     try {
-      const source = await loadAccountSourceWithRetry(
-        fs,
-        gameDir,
-        profile,
-        id,
-        options.retry,
-      )
+      const source = await loadAccountSourceWithRetry(fs, gameDir, profile, id, options.retry)
       prepared.push({ id, data: profile.prepare(source) })
     } catch (error) {
       failed.push(toAccountFailure(id, error))
@@ -233,10 +221,7 @@ export async function runSync(
   }
 }
 
-export type SyncRunner = (
-  task: SyncTask,
-  trigger: SyncTrigger,
-) => Promise<SyncReport>
+export type SyncRunner = (task: SyncTask, trigger: SyncTrigger) => Promise<SyncReport>
 
 /** A manual request outranks a startup one, which outranks a watch one. */
 const TRIGGER_RANK: Record<SyncTrigger, number> = {

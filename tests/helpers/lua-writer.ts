@@ -49,8 +49,5 @@ export function formatField(key: LuaKeyLiteral, value: LuaValue): string {
 
 /** A whole SavedVariables file: a blank first line, then one line per global. */
 export function formatSavedVariables(globals: [string, LuaValue][]): string {
-  return (
-    CRLF +
-    globals.map(([name, value]) => `${name} = ${formatValue(value)}${CRLF}`).join('')
-  )
+  return CRLF + globals.map(([name, value]) => `${name} = ${formatValue(value)}${CRLF}`).join('')
 }

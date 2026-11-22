@@ -30,19 +30,25 @@ let queue = Promise.resolve()
 
 function enqueue<T>(work: () => Promise<T>): Promise<T> {
   const result = queue.then(work)
-  queue = result.then(() => {}, () => {})
+  queue = result.then(
+    () => {},
+    () => {},
+  )
   return result
 }
 
 async function loadStore(): Promise<Store> {
   if (store) return store
   const next = await Store.load('bill-history.json', { autoSave: false })
-  histories.value = billHistoriesSchema.parse(await next.get('installations') ?? {})
+  histories.value = billHistoriesSchema.parse((await next.get('installations')) ?? {})
   store = next
   return next
 }
 
-async function updateHistory(dir: string, update: (previous: BillHistory) => BillHistory): Promise<void> {
+async function updateHistory(
+  dir: string,
+  update: (previous: BillHistory) => BillHistory,
+): Promise<void> {
   const target = await loadStore()
   const key = pathKey(dir)
   const previous = histories.value[key] ?? emptyBillHistory
@@ -82,20 +88,22 @@ export function useBiaoGeBills() {
       void enqueue(async () => {
         if (gameDir.value !== dir) return
         try {
-          const results = await Promise.all(ids.map(async (id) => {
-            try {
-              return { snapshot: await loadBiaoGeBills(tauriFs, dir, id) }
-            } catch (error) {
-              const failure = toAccountFailure(id, error)
-              return { failure: failure.reason === 'missing-source' ? undefined : failure }
-            }
-          }))
-          const snapshots = results.flatMap(({ snapshot }) => snapshot ? [snapshot] : [])
+          const results = await Promise.all(
+            ids.map(async (id) => {
+              try {
+                return { snapshot: await loadBiaoGeBills(tauriFs, dir, id) }
+              } catch (error) {
+                const failure = toAccountFailure(id, error)
+                return { failure: failure.reason === 'missing-source' ? undefined : failure }
+              }
+            }),
+          )
+          const snapshots = results.flatMap(({ snapshot }) => (snapshot ? [snapshot] : []))
           if (dir === gameDir.value) {
             source.value = {
               dir,
               bills: snapshots.flatMap(({ bills }) => bills),
-              failures: results.flatMap(({ failure }) => failure ? [failure] : []),
+              failures: results.flatMap(({ failure }) => (failure ? [failure] : [])),
             }
           }
           try {
@@ -107,40 +115,52 @@ export function useBiaoGeBills() {
         } finally {
           if (captureId === latestCapture) loading.value = false
         }
-      }).catch(() => { storageFailed.value = true })
+      }).catch(() => {
+        storageFailed.value = true
+      })
     }
 
     // Load archived bills even when the selected installation has no source accounts.
-    void enqueue(loadStore).catch(() => { storageFailed.value = true })
+    void enqueue(loadStore).catch(() => {
+      storageFailed.value = true
+    })
     watch([gameDir, profileStatus], ([dir]) => capture(dir, accounts.value), { immediate: true })
-    watch(() => JSON.stringify([gameDir.value, accounts.value]), async (_, __, onCleanup) => {
-      const dir = gameDir.value
-      const ids = accounts.value
-      let stopped = false
-      let stop: (() => void) | undefined
-      onCleanup(() => {
-        stopped = true
-        stop?.()
-      })
-      watchFailed.value = false
-      if (!dir || !ids.length) return
-      try {
-        const handle = await watchSources(tauriFs, [{ gameDir: dir, profile: biaoge, accounts: ids }], () => {
-          if (!stopped) capture(dir, ids)
+    watch(
+      () => JSON.stringify([gameDir.value, accounts.value]),
+      async (_, __, onCleanup) => {
+        const dir = gameDir.value
+        const ids = accounts.value
+        let stopped = false
+        let stop: (() => void) | undefined
+        onCleanup(() => {
+          stopped = true
+          stop?.()
         })
-        if (stopped) handle.stop()
-        else {
-          stop = handle.stop
-          // Reconcile any changes between the initial read and watch registration.
-          capture(dir, ids)
+        watchFailed.value = false
+        if (!dir || !ids.length) return
+        try {
+          const handle = await watchSources(
+            tauriFs,
+            [{ gameDir: dir, profile: biaoge, accounts: ids }],
+            () => {
+              if (!stopped) capture(dir, ids)
+            },
+          )
+          if (stopped) handle.stop()
+          else {
+            stop = () => handle.stop()
+            // Reconcile any changes between the initial read and watch registration.
+            capture(dir, ids)
+          }
+        } catch {
+          if (!stopped) watchFailed.value = true
         }
-      } catch {
-        if (!stopped) watchFailed.value = true
-      }
-    }, { immediate: true })
+      },
+      { immediate: true },
+    )
   }
 
-  const current = computed(() => source.value?.dir === gameDir.value ? source.value : undefined)
+  const current = computed(() => (source.value?.dir === gameDir.value ? source.value : undefined))
   const allBills = computed(() => [
     ...(current.value?.bills ?? []),
     ...Object.values(histories.value[pathKey(gameDir.value)]?.archived ?? {}),

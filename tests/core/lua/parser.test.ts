@@ -24,7 +24,17 @@ const SAMPLE = formatSavedVariables([
       ['text', TRICKY],
       [
         'list',
-        table([['n', 1]], [table([['choose', 0], ['text', '中文：']]), null, 'third']),
+        table(
+          [['n', 1]],
+          [
+            table([
+              ['choose', 0],
+              ['text', '中文：'],
+            ]),
+            null,
+            'third',
+          ],
+        ),
       ],
       [
         'players',
@@ -102,7 +112,23 @@ describe('parseSavedVariables', () => {
     if (!players) throw new Error('players not found')
     expect(sourceText(chunk, players.start, players.end)).toBe(
       `["players"] = ${formatValue(
-        table([[6382, table([['角色甲', table([['level', 80], ['iLevel', 227.625], ['neg', -0.0015], ['ok', true], ['bad', false]])]])]]),
+        table([
+          [
+            6382,
+            table([
+              [
+                '角色甲',
+                table([
+                  ['level', 80],
+                  ['iLevel', 227.625],
+                  ['neg', -0.0015],
+                  ['ok', true],
+                  ['bad', false],
+                ]),
+              ],
+            ]),
+          ],
+        ]),
       )},`,
     )
     expect(sourceText(chunk, players.value.end - 1, players.value.end)).toBe('}')
@@ -176,9 +202,7 @@ break" }`,
     const bytes = encodeUtf8(SAMPLE)
     for (let length = 0; length < bytes.length; length++) {
       const cut = new TextDecoder().decode(bytes.subarray(0, length))
-      const isComplete = complete.some(
-        (end) => cut.length >= end && cut.slice(end).trim() === '',
-      )
+      const isComplete = complete.some((end) => cut.length >= end && cut.slice(end).trim() === '')
       // Cuts inside a multi-byte character are not valid UTF-8 files.
       if (isComplete || cut.includes('�')) continue
       expectParseError(cut, 'eof')

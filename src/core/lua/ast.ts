@@ -100,10 +100,7 @@ const fieldIndexes = new WeakMap<LuaTable, Map<string, LuaField>>()
  * Look up a field of a table by key. Positional items match their numeric
  * index; when a key repeats, the last field wins, as in Lua.
  */
-export function fieldOf(
-  table: LuaNode | undefined,
-  key: LuaKeyValue,
-): LuaField | undefined {
+export function fieldOf(table: LuaNode | undefined, key: LuaKeyValue): LuaField | undefined {
   if (table?.kind !== 'table') return undefined
   let index = fieldIndexes.get(table)
   if (!index) {
@@ -116,10 +113,7 @@ export function fieldOf(
   return index.get(keyId(key))
 }
 
-export function valueOf(
-  table: LuaNode | undefined,
-  key: LuaKeyValue,
-): LuaNode | undefined {
+export function valueOf(table: LuaNode | undefined, key: LuaKeyValue): LuaNode | undefined {
   return fieldOf(table, key)?.value
 }
 

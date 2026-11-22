@@ -167,9 +167,7 @@ function onReset() {
         <div class="flex items-center justify-between gap-6 px-5 py-4">
           <div>
             <p class="text-sm font-medium text-highlighted">游戏版本</p>
-            <p class="mt-0.5 text-xs text-muted">
-              每个版本分别保存账号选择
-            </p>
+            <p class="mt-0.5 text-xs text-muted">每个版本分别保存账号选择</p>
           </div>
           <USelect
             v-model="settings.flavor"
@@ -188,9 +186,7 @@ function onReset() {
         <div class="flex items-start justify-between gap-6 px-5 py-4">
           <div>
             <p class="text-sm font-medium text-highlighted">恢复默认设置</p>
-            <p class="mt-0.5 text-xs text-muted">
-              将游戏目录、账号选择等所有选项还原为初始值
-            </p>
+            <p class="mt-0.5 text-xs text-muted">将游戏目录、账号选择等所有选项还原为初始值</p>
           </div>
           <UButton
             label="恢复默认"

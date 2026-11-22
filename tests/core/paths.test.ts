@@ -7,9 +7,7 @@ describe('paths', () => {
     expect(joinPath('D:\\Games\\WoW\\', '_retail_', 'WTF/Account')).toBe(
       'D:\\Games\\WoW\\_retail_\\WTF\\Account',
     )
-    expect(joinPath('/games/wow', 'Interface/AddOns', 'X')).toBe(
-      '/games/wow/Interface/AddOns/X',
-    )
+    expect(joinPath('/games/wow', 'Interface/AddOns', 'X')).toBe('/games/wow/Interface/AddOns/X')
   })
 
   it('splits names and parents', () => {

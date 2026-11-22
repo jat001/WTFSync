@@ -128,9 +128,7 @@ export async function loadAccountSourceWithRetry(
     try {
       return await loadAccountSource(fs, gameDir, profile, id)
     } catch (error) {
-      const incomplete =
-        error instanceof AccountLoadError &&
-        error.reason === 'incomplete-source'
+      const incomplete = error instanceof AccountLoadError && error.reason === 'incomplete-source'
       if (!incomplete || attempt >= retries) throw error
       await wait(delayMs)
     }

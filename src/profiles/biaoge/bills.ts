@@ -107,13 +107,15 @@ function readLines(table: LuaTable, kind: BillGroup['kind']): BillLine[] {
     const amount = numeric(amountNode)
     const amountText = amount === undefined ? displayText(amountNode) : ''
     const debt = numeric(valueOf(table, `qiankuan${slot}`))
-    const include = kind === 'expense'
-      ? Boolean(amount)
-      : Boolean(amount || debt || (item && (buyer || amount !== undefined || amountText)))
+    const include =
+      kind === 'expense'
+        ? Boolean(amount)
+        : Boolean(amount || debt || (item && (buyer || amount !== undefined || amountText)))
     if (!include) continue
     lines.push({
       slot,
-      item: item.replace(/^\[(.+)\]$/, '$1') ||
+      item:
+        item.replace(/^\[(.+)\]$/, '$1') ||
         (kind === 'fine' ? '罚款' : kind === 'expense' ? '支出' : '未命名项目'),
       buyer: buyer || undefined,
       amount,
@@ -136,13 +138,23 @@ function readBill(
   const indexedGroups: { index: number; table: LuaTable }[] = []
   for (const [key, value] of tableEntries(data)) {
     const match = typeof key === 'string' ? /^boss([1-9]\d*)$/.exec(key) : null
-    if (match && value.kind === 'table') indexedGroups.push({ index: Number(match[1]), table: value })
+    if (match && value.kind === 'table')
+      indexedGroups.push({ index: Number(match[1]), table: value })
   }
   indexedGroups.sort((a, b) => a.index - b.index)
-  const markedSummary = [...indexedGroups].reverse().find(({ table }) =>
-    summaryLabels.filter((labels, i) => labels.includes(displayText(valueOf(table, `zhuangbei${i + 1}`)))).length >= 2)
+  const markedSummary = [...indexedGroups]
+    .reverse()
+    .find(
+      ({ table }) =>
+        summaryLabels.filter((labels, i) =>
+          labels.includes(displayText(valueOf(table, `zhuangbei${i + 1}`))),
+        ).length >= 2,
+    )
   const lastIncome = markedSummary ? markedSummary.index - 2 : layout?.lastIncome
-  const summary = lastIncome === undefined ? undefined : indexedGroups.find(({ index }) => index === lastIncome + 2)?.table
+  const summary =
+    lastIncome === undefined
+      ? undefined
+      : indexedGroups.find(({ index }) => index === lastIncome + 2)?.table
   const groups: BillGroup[] = []
   for (const { index, table } of indexedGroups) {
     if (lastIncome !== undefined && index > lastIncome + 1) continue
@@ -152,8 +164,14 @@ function readBill(
       kind = 'income'
       name = layout?.bosses?.[index - 1] ?? `首领 ${index}`
       if (index === lastIncome - 1) name = '杂项'
-      if (index === lastIncome) { kind = 'fine'; name = '罚款' }
-      if (index === lastIncome + 1) { kind = 'expense'; name = '支出' }
+      if (index === lastIncome) {
+        kind = 'fine'
+        name = '罚款'
+      }
+      if (index === lastIncome + 1) {
+        kind = 'expense'
+        name = '支出'
+      }
     }
     const lines = readLines(table, kind)
     if (lines.length) groups.push({ index, kind, name, lines })
@@ -173,14 +191,16 @@ function readBill(
     expense ??= expenseTotal
   }
   const headcount = numeric(valueOf(summary, 'jine4'))
-  const net = numeric(valueOf(summary, 'jine3')) ??
+  const net =
+    numeric(valueOf(summary, 'jine3')) ??
     (income !== undefined && expense !== undefined ? income - expense : undefined)
   let wage = numeric(valueOf(summary, 'jine5'))
   if (wage === undefined && net !== undefined && headcount && headcount > 0) {
     const share = net / headcount
     wage = truncateWages ? Math.trunc(share) : Number(share.toFixed(2))
   }
-  if (identity.kind === 'current' && !groups.length && !income && !expense && !net && !wage) return undefined
+  if (identity.kind === 'current' && !groups.length && !income && !expense && !net && !wage)
+    return undefined
 
   const roster = valueOf(data, 'raidRoster')
   return {
@@ -188,13 +208,18 @@ function readBill(
     raid,
     name: layout?.name ?? '其他副本',
     realm: displayText(valueOf(roster, 'realm')) || undefined,
-    at: epochTime(numeric(valueOf(roster, 'time'))) ?? (archiveKey ? historyTime(archiveKey) : undefined),
+    at:
+      epochTime(numeric(valueOf(roster, 'time'))) ??
+      (archiveKey ? historyTime(archiveKey) : undefined),
     income,
     expense,
     net,
     headcount,
     wage,
-    debt: groups.reduce((sum, group) => sum + group.lines.reduce((total, line) => total + (line.debt ?? 0), 0), 0),
+    debt: groups.reduce(
+      (sum, group) => sum + group.lines.reduce((total, line) => total + (line.debt ?? 0), 0),
+      0,
+    ),
     groups,
   }
 }
@@ -205,12 +230,19 @@ export function readBills(root: LuaTable, account: string, flavor: string): Bill
   const truncateWages = numeric(valueOf(valueOf(root, 'options'), 'moLing')) === 1
   for (const [raid, data] of tableEntries(root)) {
     if (typeof raid !== 'string' || data.kind !== 'table') continue
-    if (raid !== activeRaid && !billLayout(raid, flavor) && !asTable(valueOf(data, 'tradeTbl'))) continue
-    const bill = readBill(data, raid, {
-      id: JSON.stringify([account, raid]),
-      account,
-      kind: 'current',
-    }, flavor, truncateWages)
+    if (raid !== activeRaid && !billLayout(raid, flavor) && !asTable(valueOf(data, 'tradeTbl')))
+      continue
+    const bill = readBill(
+      data,
+      raid,
+      {
+        id: JSON.stringify([account, raid]),
+        account,
+        kind: 'current',
+      },
+      flavor,
+      truncateWages,
+    )
     if (bill) bills.push(bill)
   }
   const historyList = valueOf(root, 'HistoryList')
@@ -226,12 +258,19 @@ export function readBills(root: LuaTable, account: string, flavor: string): Bill
     for (const [key, data] of tableEntries(history)) {
       if (typeof key === 'boolean' || data.kind !== 'table') continue
       const archiveKey = String(key)
-      const bill = readBill(data, raid, {
-        id: JSON.stringify([account, raid, key]),
-        account,
-        kind: 'history',
-        title: titles.get(archiveKey),
-      }, flavor, truncateWages, archiveKey)
+      const bill = readBill(
+        data,
+        raid,
+        {
+          id: JSON.stringify([account, raid, key]),
+          account,
+          kind: 'history',
+          title: titles.get(archiveKey),
+        },
+        flavor,
+        truncateWages,
+        archiveKey,
+      )
       if (bill) bills.push(bill)
     }
   }

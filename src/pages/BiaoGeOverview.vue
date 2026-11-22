@@ -47,8 +47,14 @@ const snapshot = shallowRef<{
 }>()
 
 let timer: ReturnType<typeof setInterval> | undefined
-onMounted(() => { timer = setInterval(() => { now.value = Date.now() }, 30_000) })
-onUnmounted(() => { clearInterval(timer) })
+onMounted(() => {
+  timer = setInterval(() => {
+    now.value = Date.now()
+  }, 30_000)
+})
+onUnmounted(() => {
+  clearInterval(timer)
+})
 
 watch(gameDir, () => {
   accountFilter.value = ALL
@@ -58,31 +64,39 @@ watch(gameDir, () => {
   deleteOpen.value = false
 })
 
-watch([gameDir, accounts], async ([dir, found], _, onCleanup) => {
-  let cancelled = false
-  onCleanup(() => { cancelled = true })
-  loading.value = Boolean(dir && found.length)
-  if (!dir || !found.length) {
-    snapshot.value = undefined
-    return
-  }
-  const results = await Promise.all(found.map(async ({ id, failure }) => {
-    if (failure) return { failure }
-    try {
-      return { overview: { id, ...await loadBiaoGeOverview(tauriFs, dir, id) } }
-    } catch (error) {
-      return { failure: toAccountFailure(id, error) }
+watch(
+  [gameDir, accounts],
+  async ([dir, found], _, onCleanup) => {
+    let cancelled = false
+    onCleanup(() => {
+      cancelled = true
+    })
+    loading.value = Boolean(dir && found.length)
+    if (!dir || !found.length) {
+      snapshot.value = undefined
+      return
     }
-  }))
-  if (cancelled) return
-  snapshot.value = {
-    gameDir: dir,
-    overviews: results.flatMap(({ overview }) => overview ? [overview] : []),
-    failures: results.flatMap(({ failure }) => failure ? [failure] : []),
-  }
-  now.value = Date.now()
-  loading.value = false
-}, { immediate: true })
+    const results = await Promise.all(
+      found.map(async ({ id, failure }) => {
+        if (failure) return { failure }
+        try {
+          return { overview: { id, ...(await loadBiaoGeOverview(tauriFs, dir, id)) } }
+        } catch (error) {
+          return { failure: toAccountFailure(id, error) }
+        }
+      }),
+    )
+    if (cancelled) return
+    snapshot.value = {
+      gameDir: dir,
+      overviews: results.flatMap(({ overview }) => (overview ? [overview] : [])),
+      failures: results.flatMap(({ failure }) => (failure ? [failure] : [])),
+    }
+    now.value = Date.now()
+    loading.value = false
+  },
+  { immediate: true },
+)
 
 const currentSnapshot = computed(() =>
   snapshot.value?.gameDir === gameDir.value ? snapshot.value : undefined,
@@ -106,7 +120,10 @@ const realms = computed(() => {
 const realmItems = computed(() => [
   { label: '全部服务器', value: ALL },
   ...[...realms.value]
-    .map(([id, label]) => ({ label: label === String(id) ? `服务器 ${id}` : label, value: String(id) }))
+    .map(([id, label]) => ({
+      label: label === String(id) ? `服务器 ${id}` : label,
+      value: String(id),
+    }))
     .sort((a, b) => a.label.localeCompare(b.label, 'zh-CN')),
 ])
 
@@ -120,26 +137,30 @@ watch(realmItems, (items) => {
 const rows = computed<RoleRow[]>(() => {
   const term = search.value.trim().toLowerCase()
   return allCharacters.value
-    .filter((character) =>
-      (accountFilter.value === ALL || character.account === accountFilter.value) &&
-      (realmFilter.value === ALL || String(character.realmId) === realmFilter.value) &&
-      character.name.toLowerCase().includes(term),
+    .filter(
+      (character) =>
+        (accountFilter.value === ALL || character.account === accountFilter.value) &&
+        (realmFilter.value === ALL || String(character.realmId) === realmFilter.value) &&
+        character.name.toLowerCase().includes(term),
     )
-    .sort((a, b) =>
-      (b.itemLevel ?? -1) - (a.itemLevel ?? -1) ||
-      (b.level ?? 0) - (a.level ?? 0) ||
-      a.name.localeCompare(b.name, 'zh-CN'),
+    .sort(
+      (a, b) =>
+        (b.itemLevel ?? -1) - (a.itemLevel ?? -1) ||
+        (b.level ?? 0) - (a.level ?? 0) ||
+        a.name.localeCompare(b.name, 'zh-CN'),
     )
     .map((character) => ({ character, locks: activeRaidLocks(character, now.value) }))
 })
 const goldTotal = computed(() => {
-  const amounts = rows.value.flatMap(({ character }) => character.gold === undefined ? [] : [character.gold])
+  const amounts = rows.value.flatMap(({ character }) =>
+    character.gold === undefined ? [] : [character.gold],
+  )
   return amounts.length ? amounts.reduce((sum, gold) => sum + gold, 0) : undefined
 })
 const latestSave = computed(() => {
   const times = (currentSnapshot.value?.overviews ?? [])
     .filter(({ id }) => accountFilter.value === ALL || id === accountFilter.value)
-    .flatMap(({ modifiedAt }) => modifiedAt === null ? [] : [modifiedAt])
+    .flatMap(({ modifiedAt }) => (modifiedAt === null ? [] : [modifiedAt]))
   return times.length ? Math.max(...times) : undefined
 })
 const failedAccounts = computed(() =>
@@ -147,7 +168,9 @@ const failedAccounts = computed(() =>
     accountFilter.value === ALL ? reason !== 'missing-source' : id === accountFilter.value,
   ),
 )
-const hasRaidData = computed(() => rows.value.some(({ character }) => character.raids !== undefined))
+const hasRaidData = computed(() =>
+  rows.value.some(({ character }) => character.raids !== undefined),
+)
 const lockCount = computed(() => rows.value.reduce((sum, { locks }) => sum + locks.length, 0))
 const columns: TableColumn<RoleRow>[] = [
   { id: 'character', header: '角色' },
@@ -165,10 +188,14 @@ function realmName({ realmId, realm }: OverviewCharacter): string {
   return name === String(realmId) ? `服务器 ${realmId}` : name
 }
 
-const selected = computed(() => allCharacters.value.find((character) => characterKey(character) === selectedKey.value))
+const selected = computed(() =>
+  allCharacters.value.find((character) => characterKey(character) === selectedKey.value),
+)
 const detailsOpen = computed({
   get: () => selected.value !== undefined,
-  set: (open: boolean) => { if (!open && !deleting.value) selectedKey.value = '' },
+  set: (open: boolean) => {
+    if (!open && !deleting.value) selectedKey.value = ''
+  },
 })
 
 async function confirmDelete() {
@@ -190,25 +217,28 @@ async function confirmDelete() {
       title: '已删除角色记录',
       description: `${character.name} · 已保留删除前的备份`,
       color: 'success',
-      actions: [{
-        label: '打开备份目录',
-        color: 'neutral',
-        variant: 'outline',
-        onClick: async () => {
-          try {
-            await openDirectory(dirname(backup))
-          } catch {
-            toast.add({ title: '无法打开备份目录', color: 'error' })
-          }
+      actions: [
+        {
+          label: '打开备份目录',
+          color: 'neutral',
+          variant: 'outline',
+          onClick: async () => {
+            try {
+              await openDirectory(dirname(backup))
+            } catch {
+              toast.add({ title: '无法打开备份目录', color: 'error' })
+            }
+          },
         },
-      }],
+      ],
     })
   } catch (error) {
     toast.add({
       title: '删除角色记录失败',
-      description: error instanceof BiaoGeSaveChangedError
-        ? '存档正在更新，请退出游戏，重新读取后再试。'
-        : '请确认游戏已退出，并且 BGLite 存档可以读写。',
+      description:
+        error instanceof BiaoGeSaveChangedError
+          ? '存档正在更新，请退出游戏，重新读取后再试。'
+          : '请确认游戏已退出，并且 BGLite 存档可以读写。',
       color: 'error',
     })
   } finally {
@@ -269,16 +299,20 @@ async function confirmDelete() {
         color="warning"
         variant="subtle"
         icon="i-lucide-circle-alert"
-        :title="failedAccounts.length === 1
-          ? failureLabels[failedAccounts[0].reason]
-          : `有 ${failedAccounts.length} 个账号的存档读取失败`"
+        :title="
+          failedAccounts.length === 1
+            ? failureLabels[failedAccounts[0].reason]
+            : `有 ${failedAccounts.length} 个账号的存档读取失败`
+        "
       />
 
       <template v-if="allCharacters.length">
         <div class="grid grid-cols-3 gap-2">
           <UCard variant="soft" :ui="{ body: 'p-3 sm:p-3' }">
             <p class="text-xs text-muted">角色</p>
-            <p class="mt-1 text-lg font-semibold tabular-nums text-highlighted">{{ rows.length }}</p>
+            <p class="mt-1 text-lg font-semibold tabular-nums text-highlighted">
+              {{ rows.length }}
+            </p>
           </UCard>
           <UCard variant="soft" :ui="{ body: 'p-3 sm:p-3' }">
             <p class="text-xs text-muted">金币合计</p>
@@ -288,7 +322,9 @@ async function confirmDelete() {
           </UCard>
           <UCard variant="soft" :ui="{ body: 'p-3 sm:p-3' }">
             <p class="text-xs text-muted">当前锁定</p>
-            <p class="mt-1 text-lg font-semibold tabular-nums text-highlighted">{{ hasRaidData ? lockCount : '—' }}</p>
+            <p class="mt-1 text-lg font-semibold tabular-nums text-highlighted">
+              {{ hasRaidData ? lockCount : '—' }}
+            </p>
           </UCard>
         </div>
 
@@ -349,12 +385,16 @@ async function confirmDelete() {
               </div>
             </template>
             <template #itemLevel-cell="{ row }">
-              <span class="tabular-nums">{{ row.original.character.itemLevel?.toFixed(1) ?? '—' }}</span>
+              <span class="tabular-nums">{{
+                row.original.character.itemLevel?.toFixed(1) ?? '—'
+              }}</span>
             </template>
             <template #gold-cell="{ row }">
               <span
                 class="whitespace-nowrap tabular-nums"
-                :class="{ 'text-amber-700 dark:text-amber-400': row.original.character.gold !== undefined }"
+                :class="{
+                  'text-amber-700 dark:text-amber-400': row.original.character.gold !== undefined,
+                }"
               >
                 {{ row.original.character.gold?.toLocaleString('zh-CN') ?? '—' }}
               </span>
@@ -387,7 +427,11 @@ async function confirmDelete() {
         <UEmpty
           :icon="scanning || loading ? 'i-lucide-loader-circle' : 'i-lucide-users'"
           :title="scanning || loading ? '正在读取角色…' : '暂无角色数据'"
-          :description="scanning || loading ? undefined : '在游戏中启用 BGLite 并登录角色，退出游戏后再重新读取。'"
+          :description="
+            scanning || loading
+              ? undefined
+              : '在游戏中启用 BGLite 并登录角色，退出游戏后再重新读取。'
+          "
           size="sm"
         />
       </UCard>
@@ -433,7 +477,13 @@ async function confirmDelete() {
             </p>
           </template>
           <template #footer>
-            <UButton label="取消" color="neutral" variant="outline" :disabled="deleting" @click="deleteOpen = false" />
+            <UButton
+              label="取消"
+              color="neutral"
+              variant="outline"
+              :disabled="deleting"
+              @click="deleteOpen = false"
+            />
             <UButton label="确认删除" color="error" :loading="deleting" @click="confirmDelete" />
           </template>
         </UModal>

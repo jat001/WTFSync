@@ -150,10 +150,7 @@ export class MemoryFileSystem implements FileSystem {
     return null
   }
 
-  async watch(
-    dirs: string[],
-    onChange: (paths: string[]) => void,
-  ): Promise<() => void> {
+  async watch(dirs: string[], onChange: (paths: string[]) => void): Promise<() => void> {
     const watcher: Watcher = { dirs: new Set(dirs.map(key)), onChange }
     this.watchers.add(watcher)
     return () => this.watchers.delete(watcher)

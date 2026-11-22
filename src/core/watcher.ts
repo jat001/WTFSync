@@ -49,9 +49,7 @@ export async function watchSources(
       }
       if (dirs.length === 0) continue
 
-      const names = new Set(
-        task.profile.sourceFiles.map((name) => name.toLowerCase()),
-      )
+      const names = new Set(task.profile.sourceFiles.map((name) => name.toLowerCase()))
       const unwatch = await fs.watch(
         dirs,
         (paths) => {

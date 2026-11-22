@@ -16,9 +16,13 @@ const bundled = await build({
   },
 })
 const outputs = Array.isArray(bundled) ? bundled : [bundled]
-const entry = outputs.flatMap(result => result.output).find(output => output.type === 'chunk' && output.isEntry)
+const entry = outputs
+  .flatMap((result) => result.output)
+  .find((output) => output.type === 'chunk' && output.isEntry)
 if (!entry) throw new Error('The sample generator did not produce an entry chunk.')
-const { generateAccount } = await import(`data:text/javascript;base64,${Buffer.from(entry.code).toString('base64')}`)
+const { generateAccount } = await import(
+  `data:text/javascript;base64,${Buffer.from(entry.code).toString('base64')}`
+)
 const sampleRoot = join(root, 'artifacts/store-sample/WorldOfWarcraft')
 const flavorDir = join(sampleRoot, '_classic_titan_')
 async function put(relativePath, text) {
@@ -26,43 +30,61 @@ async function put(relativePath, text) {
   await mkdir(dirname(path), { recursive: true })
   await writeFile(path, text, 'utf8')
 }
-await put('.build.info', 'Active!DEC:1|Version!STRING:0|Product!STRING:0\n1|3.80.2.12345|wow_classic_titan\n')
+await put(
+  '.build.info',
+  'Active!DEC:1|Version!STRING:0|Product!STRING:0\n1|3.80.2.12345|wow_classic_titan\n',
+)
 await put('_classic_titan_/.flavor.info', 'Product Flavor!STRING:0\nwow_classic_titan\n')
-await put('_classic_titan_/Interface/AddOns/BGLite/BGLite.toc', '## Title: Synthetic test fixture; not a playable addon\n')
-const accounts = [['100000001#1', 11], ['100000002#2', 12]]
+await put(
+  '_classic_titan_/Interface/AddOns/BGLite/BGLite.toc',
+  '## Title: Synthetic test fixture; not a playable addon\n',
+)
+const accounts = [
+  ['100000001#1', 11],
+  ['100000002#2', 12],
+]
 for (const [id, seed] of accounts) {
-  await put(`_classic_titan_/WTF/Account/${id}/SavedVariables/BGLite.lua`, generateAccount(id, seed).source)
+  await put(
+    `_classic_titan_/WTF/Account/${id}/SavedVariables/BGLite.lua`,
+    generateAccount(id, seed).source,
+  )
 }
-await put('README.txt', [
-  'WTFSync 离线审核示例',
-  '',
-  '所有账号、角色和物品数据均由测试生成器编造，不含真实用户存档。',
-  '这是测试目录，其中的 BGLite.toc 仅用于目录识别。',
-  '不要将这个示例复制到真实游戏目录。',
-  '',
-  '1. 解压后，在 WTFSync 的设置 > 游戏中选择本 WorldOfWarcraft 目录。',
-  '2. 回工作台，勾选两个示例账号，点击“立即同步”。',
-  '3. 检查 _classic_titan_/Interface/AddOns/BiaoGeAccounts 中的输出。',
-  '4. 再次同步应显示文件均为最新。',
-  '5. 开启自动同步后，编辑其中一个示例存档的角色等级并保存，稍后检查输出。',
-  '',
-].join('\r\n'))
-await put('README-en.txt', [
-  'WTFSync offline review sample',
-  '',
-  'All account, character and item data are synthetic. No real user SavedVariables are included.',
-  'The placeholder BGLite.toc enables WTFSync to recognize this test directory.',
-  '',
-  '1. Extract this archive to a writable local folder.',
-  '2. In WTFSync, open Settings (设置) > Game (游戏), then select the extracted WorldOfWarcraft folder.',
-  '3. Return to Workbench (工作台), select both accounts, and click Sync now (立即同步).',
-  '4. Verify the Lua files and TOC in _classic_titan_/Interface/AddOns/BiaoGeAccounts.',
-  '5. Repeating sync without a data change should report that files are already current.',
-  '6. With automatic sync enabled and the app open, change a character level in a synthetic BGLite.lua and save.',
-  '7. Output should update shortly afterwards. Settings should persist after closing and reopening the app.',
-  '',
-  'Keep this fixture in its own directory. Viewing synchronized characters in the game requires World of Warcraft, BGLite, and BGLite_RoleOverview.',
-  'WTFSync does not require Battle.net login credentials.',
-  '',
-].join('\r\n'))
+await put(
+  'README.txt',
+  [
+    'WTFSync 离线审核示例',
+    '',
+    '所有账号、角色和物品数据均由测试生成器编造，不含真实用户存档。',
+    '这是测试目录，其中的 BGLite.toc 仅用于目录识别。',
+    '不要将这个示例复制到真实游戏目录。',
+    '',
+    '1. 解压后，在 WTFSync 的设置 > 游戏中选择本 WorldOfWarcraft 目录。',
+    '2. 回工作台，勾选两个示例账号，点击“立即同步”。',
+    '3. 检查 _classic_titan_/Interface/AddOns/BiaoGeAccounts 中的输出。',
+    '4. 再次同步应显示文件均为最新。',
+    '5. 开启自动同步后，编辑其中一个示例存档的角色等级并保存，稍后检查输出。',
+    '',
+  ].join('\r\n'),
+)
+await put(
+  'README-en.txt',
+  [
+    'WTFSync offline review sample',
+    '',
+    'All account, character and item data are synthetic. No real user SavedVariables are included.',
+    'The placeholder BGLite.toc enables WTFSync to recognize this test directory.',
+    '',
+    '1. Extract this archive to a writable local folder.',
+    '2. In WTFSync, open Settings (设置) > Game (游戏), then select the extracted WorldOfWarcraft folder.',
+    '3. Return to Workbench (工作台), select both accounts, and click Sync now (立即同步).',
+    '4. Verify the Lua files and TOC in _classic_titan_/Interface/AddOns/BiaoGeAccounts.',
+    '5. Repeating sync without a data change should report that files are already current.',
+    '6. With automatic sync enabled and the app open, change a character level in a synthetic BGLite.lua and save.',
+    '7. Output should update shortly afterwards. Settings should persist after closing and reopening the app.',
+    '',
+    'Keep this fixture in its own directory. Viewing synchronized characters in the game requires World of Warcraft, BGLite, and BGLite_RoleOverview.',
+    'WTFSync does not require Battle.net login credentials.',
+    '',
+  ].join('\r\n'),
+)
 console.log(`Synthetic game directory: ${flavorDir}`)

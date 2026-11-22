@@ -32,9 +32,11 @@ function toArchive(entry: PendingBill): RaidBill {
 const billFields = Object.keys(raidBillSchema.shape) as (keyof RaidBill)[]
 
 function sameBill(left: RaidBill, right: RaidBill): boolean {
-  return billFields.every((key) => key === 'groups'
-    ? JSON.stringify(left.groups) === JSON.stringify(right.groups)
-    : left[key] === right[key])
+  return billFields.every((key) =>
+    key === 'groups'
+      ? JSON.stringify(left.groups) === JSON.stringify(right.groups)
+      : left[key] === right[key],
+  )
 }
 
 /** Persist the latest nonempty observation and close that run after a recorded clear. */

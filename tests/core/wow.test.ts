@@ -54,7 +54,10 @@ describe('client discovery', () => {
     fs.setFile(`${TEST_ROOT}\\.build.info`, '')
     expect(await readClientInfo(fs, gameDir)).toBeNull()
 
-    fs.setFile(`${gameDir}\\WTF\\Config.wtf`, 'SET locale "zhCN"\r\nSET lastAddonVersion "38001"\r\n')
+    fs.setFile(
+      `${gameDir}\\WTF\\Config.wtf`,
+      'SET locale "zhCN"\r\nSET lastAddonVersion "38001"\r\n',
+    )
     expect(await readClientInfo(fs, gameDir)).toEqual({
       version: null,
       interfaceVersion: 38001,

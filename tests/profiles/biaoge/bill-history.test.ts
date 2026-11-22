@@ -23,7 +23,11 @@ function observed(account: string, amount?: number, clear?: number, bossTime?: n
 
 describe('local raid bill history', () => {
   it('archives only the last observed bill when its account and raid clear advances', () => {
-    let state = recordBillSnapshots(emptyBillHistory, [observed('101#1', 100), observed('102#1', 300)], 10)
+    let state = recordBillSnapshots(
+      emptyBillHistory,
+      [observed('101#1', 100), observed('102#1', 300)],
+      10,
+    )
     state = recordBillSnapshots(state, [observed('101#1', 200, undefined, 1500)], 20)
     expect(Object.values(state.archived)).toHaveLength(0)
 
@@ -32,7 +36,9 @@ describe('local raid bill history', () => {
     expect(Object.values(state.archived)).toMatchObject([
       { account: '101#1', kind: 'history', income: 200, at: 1_500_000 },
     ])
-    expect(Object.values(state.pending)).toMatchObject([{ bill: { account: '102#1', income: 300 } }])
+    expect(Object.values(state.pending)).toMatchObject([
+      { bill: { account: '102#1', income: 300 } },
+    ])
     expect(recordBillSnapshots(state, [reset], 40)).toBe(state)
   })
 
@@ -44,7 +50,9 @@ describe('local raid bill history', () => {
     expect(archived).toMatchObject({ income: 120, at: 100 })
     expect(archiveCurrentBill(manual, first.bills[0])).toBe(manual)
 
-    const restored = billHistoriesSchema.parse(JSON.parse(JSON.stringify({ install: manual }))).install
+    const restored = billHistoriesSchema.parse(
+      JSON.parse(JSON.stringify({ install: manual })),
+    ).install
     expect(recordBillSnapshots(restored, [first], 200)).toBe(restored)
     const latest = recordBillSnapshots(restored, [observed('101#1', 180, 1800)], 300)
     const clearedAndReused = recordBillSnapshots(latest, [observed('101#1', 240, 1900)], 400)

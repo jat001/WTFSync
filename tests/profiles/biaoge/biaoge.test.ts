@@ -16,9 +16,7 @@ const CLIENT = { version: '3.80.2.12345', interfaceVersion: 38002 }
 function accountSource(id: string, text: string): AccountSource {
   return {
     id,
-    files: new Map([
-      ['BGLite.lua', { chunk: parseSavedVariables(text), modifiedAt: null }],
-    ]),
+    files: new Map([['BGLite.lua', { chunk: parseSavedVariables(text), modifiedAt: null }]]),
   }
 }
 
@@ -121,10 +119,7 @@ describe('BGLite profile', () => {
   it('syncs BGLite accounts and upgrades the existing output in place', async () => {
     const fs = new MemoryFileSystem()
     const gameDir = createGame(fs, { version: CLIENT.version })
-    fs.setFile(
-      `${gameDir}\\Interface\\AddOns\\BGLite\\BGLite.toc`,
-      '## SavedVariables: BiaoGe',
-    )
+    fs.setFile(`${gameDir}\\Interface\\AddOns\\BGLite\\BGLite.toc`, '## SavedVariables: BiaoGe')
     const accounts = [11, 12, 13].map((seed) => generateAccount(`2000000${seed}#1`, seed))
     for (const account of accounts) {
       fs.setFile(savedVariablesPath(gameDir, account.id, 'BGLite.lua'), account.source)

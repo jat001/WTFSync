@@ -33,11 +33,7 @@ export interface FileSystem {
    * Watch directories non-recursively. `onChange` receives the paths touched
    * by a debounced batch of events. Resolves to a function that stops it.
    */
-  watch(
-    dirs: string[],
-    onChange: (paths: string[]) => void,
-    delayMs: number,
-  ): Promise<() => void>
+  watch(dirs: string[], onChange: (paths: string[]) => void, delayMs: number): Promise<() => void>
 }
 
 /** Suffix of the temporary file written before an atomic rename. */

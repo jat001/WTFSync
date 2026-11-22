@@ -27,9 +27,7 @@ const echo: AddonProfile<string> = {
   requiredAddon: 'Echo',
   sourceFiles: ['Echo.lua'],
   outputDir: 'Interface/AddOns/EchoAccounts',
-  summarize: (source) => [
-    { realm: 'r', name: echo.prepare(source) },
-  ],
+  summarize: (source) => [{ realm: 'r', name: echo.prepare(source) }],
   prepare(source) {
     const chunk = source.files.get('Echo.lua')?.chunk
     const name = asString(valueOf(chunk?.globals.get('Echo'), 'name'))
@@ -46,9 +44,7 @@ const echo: AddonProfile<string> = {
         ...accounts.map(({ id, data }) => ({ name: `${id}.txt`, text: data })),
         { name: 'index.txt', text: index.join('\n') },
       ],
-      remove: previous
-        .filter((id) => id && !index.includes(id))
-        .map((id) => `${id}.txt`),
+      remove: previous.filter((id) => id && !index.includes(id)).map((id) => `${id}.txt`),
     }
   },
 }

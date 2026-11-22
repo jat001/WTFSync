@@ -48,10 +48,15 @@ function groupTotal({ lines }: Group): number | undefined {
 
 <template>
   <div class="@container/bill px-4 py-4 sm:px-5">
-    <div class="grid items-start gap-4 @min-[600px]/bill:grid-cols-[minmax(0,1fr)_15.5rem] @min-[880px]/bill:grid-cols-[minmax(0,1fr)_17rem]">
+    <div
+      class="grid items-start gap-4 @min-[600px]/bill:grid-cols-[minmax(0,1fr)_15.5rem] @min-[880px]/bill:grid-cols-[minmax(0,1fr)_17rem]"
+    >
       <section class="@container/income min-w-0" aria-labelledby="bill-income-heading">
         <div class="mb-2.5 flex flex-wrap items-center justify-between gap-2">
-          <h2 id="bill-income-heading" class="flex items-center gap-2 text-sm font-semibold text-highlighted">
+          <h2
+            id="bill-income-heading"
+            class="flex items-center gap-2 text-sm font-semibold text-highlighted"
+          >
             <UIcon name="i-lucide-coins" class="size-4 text-amber-700 dark:text-amber-400" />
             {{ incomeGroups.some(({ kind }) => kind === 'other') ? '账单明细' : '收入明细' }}
           </h2>
@@ -59,7 +64,10 @@ function groupTotal({ lines }: Group): number | undefined {
             欠款 {{ formatGold(bill.debt) }}
           </UBadge>
         </div>
-        <div v-if="incomeGroups.length" class="grid items-start gap-2.5 @min-[620px]/income:grid-cols-2">
+        <div
+          v-if="incomeGroups.length"
+          class="grid items-start gap-2.5 @min-[620px]/income:grid-cols-2"
+        >
           <UCard
             v-for="group in incomeGroups"
             :key="group.index"
@@ -68,10 +76,15 @@ function groupTotal({ lines }: Group): number | undefined {
           >
             <template #header>
               <div class="flex items-center justify-between gap-2 text-xs">
-                <h3 class="font-semibold" :class="group.kind === 'fine' ? 'text-error' : 'text-highlighted'">
+                <h3
+                  class="font-semibold"
+                  :class="group.kind === 'fine' ? 'text-error' : 'text-highlighted'"
+                >
                   {{ group.name }}
                 </h3>
-                <span class="shrink-0 tabular-nums text-muted">{{ formatGold(groupTotal(group)) }}</span>
+                <span class="shrink-0 tabular-nums text-muted">{{
+                  formatGold(groupTotal(group))
+                }}</span>
               </div>
             </template>
             <UTable
@@ -80,7 +93,9 @@ function groupTotal({ lines }: Group): number | undefined {
               :ui="tableUi"
             >
               <template #item-cell="{ row }">
-                <span class="wrap-break-word text-highlighted select-text">{{ row.original.item }}</span>
+                <span class="wrap-break-word text-highlighted select-text">{{
+                  row.original.item
+                }}</span>
               </template>
               <template #buyer-cell="{ row }">
                 <span class="wrap-break-word select-text">{{ row.original.buyer || '—' }}</span>
@@ -89,7 +104,10 @@ function groupTotal({ lines }: Group): number | undefined {
                 <span class="whitespace-nowrap tabular-nums text-highlighted select-text">
                   {{ row.original.amountText || formatGold(row.original.amount) }}
                 </span>
-                <p v-if="row.original.debt" class="mt-0.5 whitespace-nowrap tabular-nums text-error">
+                <p
+                  v-if="row.original.debt"
+                  class="mt-0.5 whitespace-nowrap tabular-nums text-error"
+                >
                   欠款 {{ formatGold(row.original.debt) }}
                 </p>
               </template>
@@ -111,7 +129,9 @@ function groupTotal({ lines }: Group): number | undefined {
           </template>
           <UTable v-if="expenses.length" :data="expenses" :columns="expenseColumns" :ui="tableUi">
             <template #item-cell="{ row }">
-              <span class="wrap-break-word text-highlighted select-text">{{ row.original.item }}</span>
+              <span class="wrap-break-word text-highlighted select-text">{{
+                row.original.item
+              }}</span>
             </template>
             <template #amount-cell="{ row }">
               <span class="whitespace-nowrap tabular-nums select-text">
@@ -137,10 +157,16 @@ function groupTotal({ lines }: Group): number | undefined {
               v-for="(entry, index) in overview"
               :key="entry.label"
               class="flex justify-between gap-2 px-3 py-2"
-              :class="index === 2 ? 'border-t border-default bg-muted font-semibold text-highlighted' : 'text-muted'"
+              :class="
+                index === 2
+                  ? 'border-t border-default bg-muted font-semibold text-highlighted'
+                  : 'text-muted'
+              "
             >
               <dt>{{ entry.label }}</dt>
-              <dd class="text-right tabular-nums text-highlighted select-text">{{ formatGold(entry.value) }}</dd>
+              <dd class="text-right tabular-nums text-highlighted select-text">
+                {{ formatGold(entry.value) }}
+              </dd>
             </div>
           </dl>
         </UCard>
@@ -155,17 +181,28 @@ function groupTotal({ lines }: Group): number | undefined {
           <dl class="text-xs">
             <div class="flex justify-between gap-2 px-3 py-2 text-muted">
               <dt>分金人数</dt>
-              <dd class="tabular-nums text-highlighted">{{ bill.headcount === undefined ? '—' : `${bill.headcount} 人` }}</dd>
+              <dd class="tabular-nums text-highlighted">
+                {{ bill.headcount === undefined ? '—' : `${bill.headcount} 人` }}
+              </dd>
             </div>
-            <div class="flex items-baseline justify-between gap-2 border-y border-default bg-muted px-3 py-2">
+            <div
+              class="flex items-baseline justify-between gap-2 border-y border-default bg-muted px-3 py-2"
+            >
               <dt class="font-semibold text-highlighted">人均工资</dt>
-              <dd class="text-sm font-semibold tabular-nums text-amber-700 select-text dark:text-amber-400">
+              <dd
+                class="text-sm font-semibold tabular-nums text-amber-700 select-text dark:text-amber-400"
+              >
                 {{ formatGold(bill.wage) }}
               </dd>
             </div>
-            <div v-if="bill.wage !== undefined" class="flex justify-between gap-2 px-3 py-2 text-muted">
+            <div
+              v-if="bill.wage !== undefined"
+              class="flex justify-between gap-2 px-3 py-2 text-muted"
+            >
               <dt>小队工资（5 人）</dt>
-              <dd class="tabular-nums text-highlighted select-text">{{ formatGold(bill.wage * 5) }}</dd>
+              <dd class="tabular-nums text-highlighted select-text">
+                {{ formatGold(bill.wage * 5) }}
+              </dd>
             </div>
           </dl>
         </UCard>

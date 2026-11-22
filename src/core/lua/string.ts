@@ -18,10 +18,7 @@ export function quoteLuaString(value: string): string {
       default: {
         const code = ch.codePointAt(0) ?? 0
         // Three digits so a following digit is never read as part of it.
-        out +=
-          code < 32 || code === 127
-            ? `\\${String(code).padStart(3, '0')}`
-            : ch
+        out += code < 32 || code === 127 ? `\\${String(code).padStart(3, '0')}` : ch
       }
     }
   }

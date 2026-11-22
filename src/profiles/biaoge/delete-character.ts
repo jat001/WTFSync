@@ -18,10 +18,26 @@ import type { OverviewCharacter } from './overview'
 
 // BGLite's BG.DeletePlayerData list, with account-wide settings and history excluded.
 const characterSections = new Set([
-  'Hope', 'FilterClassItemDB', 'filterClassNum', 'MeetingHorn', 'MeetingHornWhisper',
-  'FBCD', 'RaidCD', 'QuestCD', 'Money', 'MONEY', 'tradeSkillCooldown', 'PlayerItemsLevel',
-  'playerInfo', 'equip', 'bag', 'worldBossCD', 'roleOverviewNote', 'buffCD',
-  'legendaryCloak', 'RoleOverviewSort',
+  'Hope',
+  'FilterClassItemDB',
+  'filterClassNum',
+  'MeetingHorn',
+  'MeetingHornWhisper',
+  'FBCD',
+  'RaidCD',
+  'QuestCD',
+  'Money',
+  'MONEY',
+  'tradeSkillCooldown',
+  'PlayerItemsLevel',
+  'playerInfo',
+  'equip',
+  'bag',
+  'worldBossCD',
+  'roleOverviewNote',
+  'buffCD',
+  'legendaryCloak',
+  'RoleOverviewSort',
 ])
 
 interface Edit extends Span {
@@ -58,7 +74,9 @@ function collectRealmEdits(table: LuaTable, name: string, isSortTable: boolean):
     }
   })
   if (removedSortEntry && table.fields.some(({ key }) => key.kind === 'number')) {
-    const remaining = [...sortEntries].sort(([a], [b]) => a - b).filter(([, field]) => !removed.has(field))
+    const remaining = [...sortEntries]
+      .sort(([a], [b]) => a - b)
+      .filter(([, field]) => !removed.has(field))
     // Explicit numeric keys must stay contiguous for the addon's ipairs traversal.
     remaining.forEach(([, field], index) => {
       edits.push({
@@ -71,7 +89,12 @@ function collectRealmEdits(table: LuaTable, name: string, isSortTable: boolean):
   return edits
 }
 
-function removeRecords(bytes: Uint8Array, root: LuaTable, realmId: number, name: string): Uint8Array {
+function removeRecords(
+  bytes: Uint8Array,
+  root: LuaTable,
+  realmId: number,
+  name: string,
+): Uint8Array {
   const edits: Edit[] = []
   for (const section of root.fields) {
     const key = keyValue(section.key)
@@ -83,8 +106,10 @@ function removeRecords(bytes: Uint8Array, root: LuaTable, realmId: number, name:
   }
 
   edits.sort((a, b) => a.start - b.start)
-  const length = edits.reduce((size, edit) =>
-    size - (edit.end - edit.start) + (edit.replacement?.length ?? 0), bytes.length)
+  const length = edits.reduce(
+    (size, edit) => size - (edit.end - edit.start) + (edit.replacement?.length ?? 0),
+    bytes.length,
+  )
   const result = new Uint8Array(length)
   let source = 0
   let destination = 0
@@ -121,7 +146,10 @@ export async function deleteBiaoGeCharacter(
   activeEdits.add(key)
   try {
     const source = await loadAccountSource(fs, gameDir, biaoge, account)
-    const { chunk: { bytes }, root } = readBiaoGeSave(source)
+    const {
+      chunk: { bytes },
+      root,
+    } = readBiaoGeSave(source)
     const player = valueOf(valueOf(valueOf(root, 'playerInfo'), realmId), name)
     if (!asTable(player)) return undefined
 

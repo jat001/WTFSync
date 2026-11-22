@@ -32,9 +32,7 @@ export function dirname(path: string): string {
   const index = Math.max(trimmed.lastIndexOf('\\'), trimmed.lastIndexOf('/'))
   if (index < 0) return ''
   const parent = trimmed.slice(0, index)
-  return parent === '' || /^[a-zA-Z]:$/.test(parent)
-    ? trimmed.slice(0, index + 1)
-    : parent
+  return parent === '' || /^[a-zA-Z]:$/.test(parent) ? trimmed.slice(0, index + 1) : parent
 }
 
 /** Comparable form: forward slashes, no trailing slash, case-folded on Windows. */
@@ -59,6 +57,7 @@ export function isSafeFileName(name: string): boolean {
     name !== '' &&
     name !== '.' &&
     name !== '..' &&
+    // oxlint-disable-next-line no-control-regex -- Windows filenames cannot contain these control characters.
     !/[<>:"/\\|?*\x00-\x1f]/.test(name) &&
     !/[. ]$/.test(name)
   )

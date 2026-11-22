@@ -68,14 +68,10 @@ const sourceWatch = shallowRef<SourceWatch | null>(null)
 const watchError = ref<string | null>(null)
 
 const gameDir = computed(() =>
-  settings.wowRoot && settings.flavor
-    ? joinPath(settings.wowRoot, settings.flavor)
-    : '',
+  settings.wowRoot && settings.flavor ? joinPath(settings.wowRoot, settings.flavor) : '',
 )
 
-const statuses = computed(() =>
-  scan.value?.gameDir === gameDir.value ? scan.value.statuses : {},
-)
+const statuses = computed(() => (scan.value?.gameDir === gameDir.value ? scan.value.statuses : {}))
 
 function selectionKey(profile: AddonProfile): string {
   return accountSelectionKey(gameDir.value, profile.id)
@@ -113,10 +109,7 @@ const tasks = computed<SyncTask[]>(() => {
 
 let nextActivityId = 1
 function record(entry: Omit<ActivityEntry, 'id'>): void {
-  activity.value = [{ id: nextActivityId++, ...entry }, ...activity.value].slice(
-    0,
-    MAX_ACTIVITY,
-  )
+  activity.value = [{ id: nextActivityId++, ...entry }, ...activity.value].slice(0, MAX_ACTIVITY)
 }
 
 const queue = createSyncQueue(async (task, trigger) => {
@@ -161,10 +154,7 @@ function canSyncProfile(profile: AddonProfile, trigger: SyncTrigger = 'manual'):
  * profile whose selection was explicitly emptied but whose output still lists
  * accounts, so deselecting everything clears the output too.
  */
-async function sync(
-  trigger: SyncTrigger,
-  only?: AddonProfile,
-): Promise<SyncOutcome[]> {
+async function sync(trigger: SyncTrigger, only?: AddonProfile): Promise<SyncOutcome[]> {
   if (!isTauri || !gameDir.value) return []
   const targets = profiles.filter(
     (profile) => (!only || profile.id === only.id) && canSyncProfile(profile, trigger),
@@ -322,9 +312,7 @@ export function useSync() {
 
   const running = computed(() => runningCount.value > 0)
   const lastActivity = computed(() => activity.value[0] ?? null)
-  const watchedAccounts = computed(
-    () => sourceWatch.value?.watchedDirs.length ?? 0,
-  )
+  const watchedAccounts = computed(() => sourceWatch.value?.watchedDirs.length ?? 0)
 
   function outputDir(profile: AddonProfile): string {
     return gameDir.value ? outputDirOf(gameDir.value, profile) : ''

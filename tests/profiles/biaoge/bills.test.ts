@@ -37,20 +37,39 @@ describe('BGLite raid bills', () => {
     const { bills } = await loadBiaoGeBills(fs, gameDir, account)
     expect(bills).toEqual([
       expect.objectContaining({
-        account, kind: 'current', name: '奥杜尔', realm: '测试服务器', at: 1_780_000_000_000,
-        income: 1600, expense: 201, net: 1399, headcount: 25, wage: 55, debt: 250,
+        account,
+        kind: 'current',
+        name: '奥杜尔',
+        realm: '测试服务器',
+        at: 1_780_000_000_000,
+        income: 1600,
+        expense: 201,
+        net: 1399,
+        headcount: 25,
+        wage: 55,
+        debt: 250,
         groups: [
           expect.objectContaining({
-            index: 1, name: '烈焰巨兽', kind: 'income',
+            index: 1,
+            name: '烈焰巨兽',
+            kind: 'income',
             lines: [
-              expect.objectContaining({ slot: 1, item: '测试铠甲', buyer: '测试玩家', amount: 1450, debt: 250 }),
+              expect.objectContaining({
+                slot: 1,
+                item: '测试铠甲',
+                buyer: '测试玩家',
+                amount: 1450,
+                debt: 250,
+              }),
               expect.objectContaining({ slot: 4, item: '免费装备', amount: 0 }),
             ],
           }),
           expect.objectContaining({ index: 15, name: '杂项', kind: 'income' }),
           expect.objectContaining({ index: 16, name: '罚款', kind: 'fine' }),
           expect.objectContaining({
-            index: 17, name: '支出', kind: 'expense',
+            index: 17,
+            name: '支出',
+            kind: 'expense',
             lines: [expect.objectContaining({ slot: 1, item: '坦克补贴', amount: 201 })],
           }),
         ],
@@ -62,7 +81,9 @@ describe('BGLite raid bills', () => {
 
   it('joins archived details to their titles and respects saved summary positions and amounts', async () => {
     const fs = new MemoryFileSystem()
-    fs.setFile(path, `BiaoGe = {
+    fs.setFile(
+      path,
+      `BiaoGe = {
       HistoryList = { ULDtitan = { { 261122201530, "|cff123456公会金团|r" }, { 261122210000, "只有标题" } } },
       History = {
         ULDtitan = {
@@ -78,29 +99,48 @@ describe('BGLite raid bills', () => {
           [1780001000] = { boss15 = { jine1 = 0, jine2 = 0, jine4 = 25 } },
         },
       },
-    }`)
+    }`,
+    )
     const { bills } = await loadBiaoGeBills(fs, gameDir, account)
     expect(bills).toHaveLength(3)
     expect(bills.find(({ raid }) => raid === 'ULDtitan')).toMatchObject({
-      kind: 'history', title: '公会金团', at: new Date(2026, 10, 22, 20, 15, 30).getTime(),
-      income: 3600, expense: 125, net: 3475, headcount: 24, wage: 144.79,
-      groups: [{ index: 1, kind: 'income' }, { index: 16, kind: 'expense' }],
+      kind: 'history',
+      title: '公会金团',
+      at: new Date(2026, 10, 22, 20, 15, 30).getTime(),
+      income: 3600,
+      expense: 125,
+      net: 3475,
+      headcount: 24,
+      wage: 144.79,
+      groups: [
+        { index: 1, kind: 'income' },
+        { index: 16, kind: 'expense' },
+      ],
     })
     expect(bills.find(({ raid }) => raid === 'MC')).toMatchObject({
-      kind: 'history', name: '熔火之心', at: 1_780_000_000_000, income: 200,
+      kind: 'history',
+      name: '熔火之心',
+      at: 1_780_000_000_000,
+      income: 200,
     })
     expect(bills.find(({ at }) => at === 1_780_001_000_000)).toMatchObject({
-      kind: 'history', income: 0, expense: 0, groups: [],
+      kind: 'history',
+      income: 0,
+      expense: 0,
+      groups: [],
     })
   })
 
   it('limits bill reads to the active BGLite save', async () => {
     const fs = new MemoryFileSystem()
-    const archive = 'BiaoGe = { History = { ULDtitan = { [261122201530] = { boss1 = { jine1 = 200 } } } } }'
+    const archive =
+      'BiaoGe = { History = { ULDtitan = { [261122201530] = { boss1 = { jine1 = 200 } } } } }'
     fs.setFile(savedVariablesPath(gameDir, account, 'BiaoGe.lua'), archive)
     fs.setFile(path + '.bak', archive)
 
-    await expect(loadBiaoGeBills(fs, gameDir, account)).rejects.toMatchObject({ reason: 'missing-source' })
+    await expect(loadBiaoGeBills(fs, gameDir, account)).rejects.toMatchObject({
+      reason: 'missing-source',
+    })
     fs.setFile(path, 'BiaoGe = {}')
     await expect(loadBiaoGeBills(fs, gameDir, account)).resolves.toMatchObject({ bills: [] })
   })

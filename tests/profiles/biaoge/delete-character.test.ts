@@ -6,7 +6,10 @@ import { parseSavedVariables } from '../../../src/core/lua/parser'
 import { dirname } from '../../../src/core/paths'
 import { encodeUtf8, toCrlf } from '../../../src/core/text'
 import { loadBiaoGeOverview } from '../../../src/profiles/biaoge'
-import { BiaoGeSaveChangedError, deleteBiaoGeCharacter } from '../../../src/profiles/biaoge/delete-character'
+import {
+  BiaoGeSaveChangedError,
+  deleteBiaoGeCharacter,
+} from '../../../src/profiles/biaoge/delete-character'
 import { savedVariablesPath } from '../../helpers/game'
 import { MemoryFileSystem } from '../../helpers/memory-fs'
 
@@ -47,9 +50,11 @@ describe('delete BGLite character records', () => {
 
     const result = fs.getBytes(file)!
     expect([...result.subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf])
-    expect(fs.getText(file)).toContain(toCrlf(`History = { ["星光"] = "account-wide history" },
+    expect(fs.getText(file)).toContain(
+      toCrlf(`History = { ["星光"] = "account-wide history" },
 }
-Other = { note = "keep this assignment intact" }`))
+Other = { note = "keep this assignment intact" }`),
+    )
     const table = parseSavedVariables(result).globals.get('BiaoGe')
     const money = valueOf(valueOf(table, 'MONEY'), 123)
     const hope = valueOf(valueOf(table, 'Hope'), 123)
@@ -62,8 +67,10 @@ Other = { note = "keep this assignment intact" }`))
     expect(valueOf(order, 3)).toBeUndefined()
 
     const overview = await loadBiaoGeOverview(fs, gameDir, target.account)
-    expect(overview.characters.map(({ name, realmId }) => [name, realmId]))
-      .toEqual([['晴空', 123], ['星光', 124]])
+    expect(overview.characters.map(({ name, realmId }) => [name, realmId])).toEqual([
+      ['晴空', 123],
+      ['星光', 124],
+    ])
     await expect(deleteBiaoGeCharacter(fs, gameDir, target)).resolves.toBeUndefined()
     expect((await fs.readDir(dirname(file))).map(({ name }) => name)).toHaveLength(2)
   })
@@ -78,7 +85,9 @@ Other = { note = "keep this assignment intact" }`))
       if (name === file + TEMP_SUFFIX) fs.setFile(file, latest)
     }
 
-    await expect(deleteBiaoGeCharacter(fs, gameDir, target)).rejects.toBeInstanceOf(BiaoGeSaveChangedError)
+    await expect(deleteBiaoGeCharacter(fs, gameDir, target)).rejects.toBeInstanceOf(
+      BiaoGeSaveChangedError,
+    )
     expect(fs.getBytes(file)).toEqual(encodeUtf8(latest))
     expect((await fs.readDir(dirname(file))).map(({ name }) => name)).toEqual(['BGLite.lua'])
   })

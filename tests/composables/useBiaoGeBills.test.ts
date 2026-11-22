@@ -15,17 +15,22 @@ vi.mock('../../src/lib/fs', () => ({ allowFsDirectories: async () => [] }))
 vi.mock('../../src/core/tauri-fs', () => ({ tauriFs: fs }))
 vi.mock('@tauri-apps/plugin-store', () => ({
   Store: {
-    load: async (name: string) => name === 'bill-history.json'
-      ? {
-          get: async () => stored,
-          set: async (_key: string, value: Record<string, BillHistory>) => { staged = value },
-          save: async () => { stored = JSON.parse(JSON.stringify(staged)) },
-        }
-      : {
-          get: async () => ({ wowRoot: TEST_ROOT, flavor: '_classic_titan_', autoSync: false }),
-          set: async () => {},
-          save: async () => {},
-        },
+    load: async (name: string) =>
+      name === 'bill-history.json'
+        ? {
+            get: async () => stored,
+            set: async (_key: string, value: Record<string, BillHistory>) => {
+              staged = value
+            },
+            save: async () => {
+              stored = JSON.parse(JSON.stringify(staged))
+            },
+          }
+        : {
+            get: async () => ({ wowRoot: TEST_ROOT, flavor: '_classic_titan_', autoSync: false }),
+            set: async () => {},
+            save: async () => {},
+          },
   },
 }))
 

@@ -38,7 +38,10 @@ watch(gameDir, () => {
 
 const accountItems = computed(() => [
   { label: '全部账号', value: ALL },
-  ...[...new Set(allBills.value.map(({ account }) => account))].map((account) => ({ label: account, value: account })),
+  ...[...new Set(allBills.value.map(({ account }) => account))].map((account) => ({
+    label: account,
+    value: account,
+  })),
 ])
 const kindLabels = { current: '当前表格', history: '历史账单' }
 const kindItems = [
@@ -47,31 +50,50 @@ const kindItems = [
   { label: kindLabels.history, value: 'history' },
 ]
 const hasHistory = computed(() => allBills.value.some(({ kind }) => kind === 'history'))
-watch(hasHistory, (exists) => { if (!exists) kindFilter.value = ALL })
+watch(hasHistory, (exists) => {
+  if (!exists) kindFilter.value = ALL
+})
 watch(accountItems, (items) => {
   if (!items.some(({ value }) => value === accountFilter.value)) accountFilter.value = ALL
 })
-watch([search, accountFilter, kindFilter], () => { page.value = 1 })
+watch([search, accountFilter, kindFilter], () => {
+  page.value = 1
+})
 
 const filtered = computed(() => {
   const term = search.value.trim().toLowerCase()
-  return allBills.value.filter((bill) => {
-    if (accountFilter.value !== ALL && accountFilter.value !== bill.account) return false
-    if (kindFilter.value !== ALL && kindFilter.value !== bill.kind) return false
-    if (!term || [bill.name, bill.title, bill.realm].some((text) => text?.toLowerCase().includes(term))) return true
-    return bill.groups.some(({ lines }) => lines.some(({ item, buyer }) =>
-      item.toLowerCase().includes(term) || buyer?.toLowerCase().includes(term),
-    ))
-  }).sort((a, b) =>
-    Number(a.kind === 'history') - Number(b.kind === 'history') ||
-    (b.at ?? 0) - (a.at ?? 0) ||
-    a.name.localeCompare(b.name, 'zh-CN'),
-  )
+  return allBills.value
+    .filter((bill) => {
+      if (accountFilter.value !== ALL && accountFilter.value !== bill.account) return false
+      if (kindFilter.value !== ALL && kindFilter.value !== bill.kind) return false
+      if (
+        !term ||
+        [bill.name, bill.title, bill.realm].some((text) => text?.toLowerCase().includes(term))
+      )
+        return true
+      return bill.groups.some(({ lines }) =>
+        lines.some(
+          ({ item, buyer }) =>
+            item.toLowerCase().includes(term) || buyer?.toLowerCase().includes(term),
+        ),
+      )
+    })
+    .sort(
+      (a, b) =>
+        Number(a.kind === 'history') - Number(b.kind === 'history') ||
+        (b.at ?? 0) - (a.at ?? 0) ||
+        a.name.localeCompare(b.name, 'zh-CN'),
+    )
 })
-watch(() => filtered.value.length, (count) => {
-  page.value = Math.min(page.value, Math.max(1, Math.ceil(count / PAGE_SIZE)))
-})
-const rows = computed(() => filtered.value.slice((page.value - 1) * PAGE_SIZE, page.value * PAGE_SIZE))
+watch(
+  () => filtered.value.length,
+  (count) => {
+    page.value = Math.min(page.value, Math.max(1, Math.ceil(count / PAGE_SIZE)))
+  },
+)
+const rows = computed(() =>
+  filtered.value.slice((page.value - 1) * PAGE_SIZE, page.value * PAGE_SIZE),
+)
 const columns: TableColumn<RaidBill>[] = [
   { accessorKey: 'name', header: '账单' },
   { accessorKey: 'income', header: '收入' },
@@ -87,7 +109,9 @@ function billContext(bill: RaidBill): string {
 const selected = computed(() => allBills.value.find(({ id }) => id === selectedId.value))
 const detailsOpen = computed({
   get: () => selected.value !== undefined,
-  set: (open: boolean) => { if (!open) selectedId.value = '' },
+  set: (open: boolean) => {
+    if (!open) selectedId.value = ''
+  },
 })
 
 async function saveSelectedBill() {
@@ -153,9 +177,9 @@ async function saveSelectedBill() {
         variant="subtle"
         icon="i-lucide-circle-alert"
         :title="`${current.failures.length} 个账号的存档读取失败`"
-        :description="current.failures.length === 1
-          ? failureLabels[current.failures[0].reason]
-          : undefined"
+        :description="
+          current.failures.length === 1 ? failureLabels[current.failures[0].reason] : undefined
+        "
       />
       <UAlert
         v-if="watchFailed"
@@ -184,8 +208,20 @@ async function saveSelectedBill() {
             size="sm"
             class="min-w-40 flex-1"
           />
-          <USelect v-if="hasHistory" v-model="kindFilter" :items="kindItems" aria-label="账单类型" size="sm" />
-          <USelect v-if="accountItems.length > 2" v-model="accountFilter" :items="accountItems" aria-label="筛选账号" size="sm" />
+          <USelect
+            v-if="hasHistory"
+            v-model="kindFilter"
+            :items="kindItems"
+            aria-label="账单类型"
+            size="sm"
+          />
+          <USelect
+            v-if="accountItems.length > 2"
+            v-model="accountFilter"
+            :items="accountItems"
+            aria-label="筛选账号"
+            size="sm"
+          />
         </div>
         <UTable
           v-if="rows.length"
@@ -205,31 +241,51 @@ async function saveSelectedBill() {
               {{ row.original.name }}
             </UButton>
             <p class="mt-0.5 text-xs text-muted">{{ billContext(row.original) }}</p>
-            <p v-if="row.original.title" class="line-clamp-1 text-xs text-muted" :title="row.original.title">
+            <p
+              v-if="row.original.title"
+              class="line-clamp-1 text-xs text-muted"
+              :title="row.original.title"
+            >
               {{ row.original.title }}
             </p>
           </template>
           <template #income-cell="{ row }">
-            <span class="whitespace-nowrap tabular-nums">{{ formatGold(row.original.income) }}</span>
+            <span class="whitespace-nowrap tabular-nums">{{
+              formatGold(row.original.income)
+            }}</span>
           </template>
           <template #expense-cell="{ row }">
-            <span class="whitespace-nowrap tabular-nums">{{ formatGold(row.original.expense) }}</span>
+            <span class="whitespace-nowrap tabular-nums">{{
+              formatGold(row.original.expense)
+            }}</span>
           </template>
           <template #wage-cell="{ row }">
             <span class="whitespace-nowrap tabular-nums">{{ formatGold(row.original.wage) }}</span>
           </template>
         </UTable>
         <UEmpty v-else icon="i-lucide-search-x" title="没有符合条件的账单" size="sm" />
-        <div v-if="filtered.length > PAGE_SIZE" class="flex flex-wrap items-center justify-between gap-2 border-t border-default px-4 py-3">
+        <div
+          v-if="filtered.length > PAGE_SIZE"
+          class="flex flex-wrap items-center justify-between gap-2 border-t border-default px-4 py-3"
+        >
           <span class="text-xs text-muted">共 {{ filtered.length }} 笔账单</span>
-          <UPagination v-model:page="page" :items-per-page="PAGE_SIZE" :total="filtered.length" size="xs" />
+          <UPagination
+            v-model:page="page"
+            :items-per-page="PAGE_SIZE"
+            :total="filtered.length"
+            size="xs"
+          />
         </div>
       </UCard>
       <UCard v-else>
         <UEmpty
           :icon="scanning || loading ? 'i-lucide-loader-circle' : 'i-lucide-receipt-text'"
           :title="scanning || loading ? '正在读取账单…' : '暂无已保存的账单'"
-          :description="scanning || loading ? undefined : '在游戏里记账后，退出游戏或重载界面以保存，再重新读取。'"
+          :description="
+            scanning || loading
+              ? undefined
+              : '在游戏里记账后，退出游戏或重载界面以保存，再重新读取。'
+          "
           size="sm"
         />
       </UCard>

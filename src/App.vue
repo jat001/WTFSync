@@ -144,30 +144,20 @@ function isActive(key: PageKey) {
 
 <template>
   <UApp>
-    <div
-      class="flex h-screen min-h-0 select-none flex-col overflow-hidden bg-default text-default"
-    >
+    <div class="flex h-screen min-h-0 select-none flex-col overflow-hidden bg-default text-default">
       <div class="flex min-h-0 min-w-0 flex-1">
         <!-- Sidebar navigation -->
-        <aside
-          class="flex w-52 shrink-0 flex-col border-r border-default bg-muted"
-        >
-          <div
-            class="flex items-center gap-2.5 border-b border-default px-4 py-3"
-          >
+        <aside class="flex w-52 shrink-0 flex-col border-r border-default bg-muted">
+          <div class="flex items-center gap-2.5 border-b border-default px-4 py-3">
             <AppLogo />
             <div class="min-w-0">
-              <p class="truncate text-[13px] font-semibold text-highlighted">
-                WTFSync
-              </p>
+              <p class="truncate text-[13px] font-semibold text-highlighted">WTFSync</p>
               <p class="truncate text-[11px] text-dimmed">插件数据同步</p>
             </div>
           </div>
 
           <nav class="min-h-0 flex-1 overflow-y-auto px-2 py-3">
-            <p
-              class="px-2 pb-1.5 text-[11px] font-medium uppercase tracking-wide text-dimmed"
-            >
+            <p class="px-2 pb-1.5 text-[11px] font-medium uppercase tracking-wide text-dimmed">
               导航
             </p>
             <div class="space-y-0.5">
@@ -188,24 +178,15 @@ function isActive(key: PageKey) {
           <div class="border-t border-default px-3 py-3">
             <div class="flex items-center justify-between text-xs">
               <span class="text-muted">自动同步</span>
-              <USwitch
-                v-model="settings.autoSync"
-                size="sm"
-                aria-label="自动同步"
-              />
+              <USwitch v-model="settings.autoSync" size="sm" aria-label="自动同步" />
             </div>
             <p class="mt-1.5 truncate text-[11px] text-dimmed" :title="lastSyncText">
               {{ lastSyncText }}
             </p>
           </div>
 
-          <div
-            class="flex items-center gap-2 border-t border-default px-4 py-2.5"
-          >
-            <span
-              class="size-1.5 shrink-0 rounded-full"
-              :class="watchState.dot"
-            />
+          <div class="flex items-center gap-2 border-t border-default px-4 py-2.5">
+            <span class="size-1.5 shrink-0 rounded-full" :class="watchState.dot" />
             <span class="truncate text-[11px] text-muted">
               {{ watchState.text }}
             </span>
@@ -220,9 +201,7 @@ function isActive(key: PageKey) {
                   @click="cycleTheme"
                 />
               </UTooltip>
-              <span class="px-1 text-[11px] tabular-nums text-dimmed"
-                >v{{ pkg.version }}</span
-              >
+              <span class="px-1 text-[11px] tabular-nums text-dimmed">v{{ pkg.version }}</span>
             </span>
           </div>
         </aside>
@@ -237,11 +216,7 @@ function isActive(key: PageKey) {
       <footer
         class="flex h-7 shrink-0 items-center gap-2 border-t border-default bg-muted px-3 text-[11px] text-muted"
       >
-        <UIcon
-          :name="watchState.icon"
-          class="size-3.5 shrink-0"
-          :class="watchState.tone"
-        />
+        <UIcon :name="watchState.icon" class="size-3.5 shrink-0" :class="watchState.tone" />
         <span class="shrink-0">{{ watchState.text }}</span>
         <span class="flex h-3 items-center">
           <USeparator orientation="vertical" />
@@ -254,17 +229,12 @@ function isActive(key: PageKey) {
         <span class="flex h-3 items-center">
           <USeparator orientation="vertical" />
         </span>
-        <UBadge :color="health.color" variant="subtle" size="sm">{{
-          health.label
-        }}</UBadge>
+        <UBadge :color="health.color" variant="subtle" size="sm">{{ health.label }}</UBadge>
       </footer>
     </div>
 
     <!-- Global modal -->
-    <UModal
-      v-model:open="modalOpen"
-      :title="currentModal ? modalTitles[currentModal] : ''"
-    >
+    <UModal v-model:open="modalOpen" :title="currentModal ? modalTitles[currentModal] : ''">
       <template #body>
         <SyncReportModal v-if="currentModal === 'sync-report'" />
       </template>

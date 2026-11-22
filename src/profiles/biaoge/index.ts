@@ -2,13 +2,7 @@ import loaderTemplate from '../../../addons/BiaoGeAccounts/BiaoGeAccounts.lua?ra
 import tocTemplate from '../../../addons/BiaoGeAccounts/BiaoGeAccounts.toc?raw'
 import { isValidAccountName, loadAccountSourceWithRetry } from '../../core/accounts'
 import type { FileSystem } from '../../core/fs'
-import {
-  asTable,
-  fieldOf,
-  sourceText,
-  type LuaChunk,
-  type LuaTable,
-} from '../../core/lua/ast'
+import { asTable, fieldOf, sourceText, type LuaChunk, type LuaTable } from '../../core/lua/ast'
 import { quoteLuaString } from '../../core/lua/string'
 import { basename } from '../../core/paths'
 import {
@@ -51,9 +45,9 @@ export function parseLoaderKeys(loader: string): string[] {
  * Top-level fields of `BiaoGe` copied into each account file, in order.
  * Derived from the loader so the two can never drift apart.
  */
-export const EXPORT_KEYS: readonly string[] = parseLoaderKeys(
-  loaderTemplate,
-).filter((key) => key !== ACCOUNT_NAME_KEY)
+export const EXPORT_KEYS: readonly string[] = parseLoaderKeys(loaderTemplate).filter(
+  (key) => key !== ACCOUNT_NAME_KEY,
+)
 
 function accountFile(id: string): string {
   return id + ACCOUNT_FILE_EXT
@@ -77,7 +71,9 @@ export function readBiaoGeSave(source: AccountSource) {
 }
 
 export async function loadBiaoGeOverview(fs: FileSystem, gameDir: string, id: string) {
-  const { root, modifiedAt } = readBiaoGeSave(await loadAccountSourceWithRetry(fs, gameDir, biaoge, id))
+  const { root, modifiedAt } = readBiaoGeSave(
+    await loadAccountSourceWithRetry(fs, gameDir, biaoge, id),
+  )
   return { modifiedAt, characters: readOverview(root, id) }
 }
 
@@ -91,11 +87,7 @@ export async function loadBiaoGeBills(fs: FileSystem, gameDir: string, id: strin
  * `table.insert(_BiaoGeAccounts, { ... })`, with the account name injected
  * into `playerInfo`.
  */
-export function renderAccountFile(
-  account: string,
-  chunk: LuaChunk,
-  root: LuaTable,
-): string {
+export function renderAccountFile(account: string, chunk: LuaChunk, root: LuaTable): string {
   const blocks: string[] = []
   for (const key of EXPORT_KEYS) {
     const field = fieldOf(root, key)
@@ -105,10 +97,7 @@ export function renderAccountFile(
       // Insert right before the table's closing brace.
       const brace = field.value.end - 1
       const entry = `[${quoteLuaString(ACCOUNT_NAME_KEY)}]=${quoteLuaString(account)},`
-      text =
-        sourceText(chunk, field.start, brace) +
-        entry +
-        sourceText(chunk, brace, field.end)
+      text = sourceText(chunk, field.start, brace) + entry + sourceText(chunk, brace, field.end)
     } else {
       text = sourceText(chunk, field.start, field.end)
     }
@@ -121,10 +110,7 @@ export function renderAccountFile(
  * The template toc up to its loader line, followed by the account files,
  * with `{{INTERFACE}}` set to the installed client's interface version.
  */
-export function renderToc(
-  accountFiles: readonly string[],
-  interfaceVersion: number,
-): string {
+export function renderToc(accountFiles: readonly string[], interfaceVersion: number): string {
   const toc = fillTemplate(tocTemplate, { INTERFACE: String(interfaceVersion) })
   const lines = toc.split(/\r\n|\r|\n/)
   const loaderLine = lines.findIndex((line) => line.trim() === LOADER_FILE)

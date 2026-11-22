@@ -16,8 +16,36 @@ import { EXPORT_KEYS } from '../../src/profiles/biaoge/index'
  */
 
 const REALM_IDS = [4533, 4534, 6379, 6380, 6382, 6384]
-const CLASSES = ['WARRIOR', 'PALADIN', 'HUNTER', 'ROGUE', 'PRIEST', 'DEATHKNIGHT', 'SHAMAN', 'MAGE', 'WARLOCK', 'DRUID']
-const SYLLABLES = ['晨', '夜', '霜', '星', '风', '影', '月', '岚', '雷', '焰', 'Ar', 'el', 'th', 'or', 'ia', 'yn']
+const CLASSES = [
+  'WARRIOR',
+  'PALADIN',
+  'HUNTER',
+  'ROGUE',
+  'PRIEST',
+  'DEATHKNIGHT',
+  'SHAMAN',
+  'MAGE',
+  'WARLOCK',
+  'DRUID',
+]
+const SYLLABLES = [
+  '晨',
+  '夜',
+  '霜',
+  '星',
+  '风',
+  '影',
+  '月',
+  '岚',
+  '雷',
+  '焰',
+  'Ar',
+  'el',
+  'th',
+  'or',
+  'ia',
+  'yn',
+]
 const RAIDS = ['NAXXtitan', 'ULDtitan', 'TOCtitan', 'BWL', 'SSC']
 /** Text exercising escapes and Lua punctuation inside strings. */
 const TRICKY_TEXT = '备注 {重要}，含 "引号"、\\ 反斜杠、--、]] 和 | 竖线\n第二行'
@@ -125,16 +153,20 @@ export function generateAccount(id: string, seed: number): GeneratedAccount {
       perCharacter(allRealms, characters, () =>
         table([
           ['1', table([['link', itemLink(rng)]])],
-          ['5', table([['link', itemLink(rng)], ['count', 1]])],
+          [
+            '5',
+            table([
+              ['link', itemLink(rng)],
+              ['count', 1],
+            ]),
+          ],
         ]),
       ),
     ],
     [
       'bag',
       // Array part with a nil hole, like an empty bag slot.
-      perCharacter(allRealms, characters, () =>
-        table([], [itemLink(rng), null, itemLink(rng)]),
-      ),
+      perCharacter(allRealms, characters, () => table([], [itemLink(rng), null, itemLink(rng)])),
     ],
     [
       'History',
@@ -146,7 +178,14 @@ export function generateAccount(id: string, seed: number): GeneratedAccount {
                 [
                   String(1_780_000_000 + rng.int(0, 9_999_999)),
                   table([
-                    ['boss1', table([['zhuangbei1', itemLink(rng)], ['maijia1', name(rng)], ['jine1', '1500']])],
+                    [
+                      'boss1',
+                      table([
+                        ['zhuangbei1', itemLink(rng)],
+                        ['maijia1', name(rng)],
+                        ['jine1', '1500'],
+                      ]),
+                    ],
                   ]),
                 ],
               ])
@@ -159,7 +198,10 @@ export function generateAccount(id: string, seed: number): GeneratedAccount {
       table(
         RAIDS.map((raid) => [
           raid,
-          table([], rng.chance(0.4) ? [table([], [1_780_000_000 + rng.int(0, 99_999), '团本记录'])] : []),
+          table(
+            [],
+            rng.chance(0.4) ? [table([], [1_780_000_000 + rng.int(0, 99_999), '团本记录'])] : [],
+          ),
         ]),
       ),
     ],
@@ -168,13 +210,24 @@ export function generateAccount(id: string, seed: number): GeneratedAccount {
       perCharacter(allRealms, characters, () =>
         table([
           ['fish', table([['notFinish', true]])],
-          ['dayQuestCount', table([['count', rng.int(0, 5)], ['resettime', -rng.int(1, 3600)]])],
+          [
+            'dayQuestCount',
+            table([
+              ['count', rng.int(0, 5)],
+              ['resettime', -rng.int(1, 3600)],
+            ]),
+          ],
         ]),
       ),
     ],
     [
       'roleOverviewNote',
-      table(realms.map((realmId) => [realmId, table(rng.chance(0.5) ? [[name(rng), TRICKY_TEXT]] : [])])),
+      table(
+        realms.map((realmId) => [
+          realmId,
+          table(rng.chance(0.5) ? [[name(rng), TRICKY_TEXT]] : []),
+        ]),
+      ),
     ],
   ]
   // Optional fields, present in some accounts only.
@@ -183,8 +236,23 @@ export function generateAccount(id: string, seed: number): GeneratedAccount {
   }
 
   const others: [string, LuaValue][] = [
-    ['welcome', table([['body', `{C}，${TRICKY_TEXT}`], ['choose', 0]], [table([['text', 'YY：']])])],
-    ['options', table([['autoTrade', 1], ['ratio', 0.5]])],
+    [
+      'welcome',
+      table(
+        [
+          ['body', `{C}，${TRICKY_TEXT}`],
+          ['choose', 0],
+        ],
+        [table([['text', 'YY：']])],
+      ),
+    ],
+    [
+      'options',
+      table([
+        ['autoTrade', 1],
+        ['ratio', 0.5],
+      ]),
+    ],
     ['lastGuoQiTime', 1_780_000_000],
     ['FB', 'NAXXtitan'],
   ]

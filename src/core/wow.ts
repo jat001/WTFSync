@@ -70,10 +70,7 @@ export function interfaceFromVersion(version: string): number | null {
  * at the install root: a `|`-separated table whose header row names the
  * columns (`Name!TYPE:size`).
  */
-export async function readBuildInfo(
-  fs: FileSystem,
-  root: string,
-): Promise<Map<string, string>> {
+export async function readBuildInfo(fs: FileSystem, root: string): Promise<Map<string, string>> {
   const versions = new Map<string, string>()
   let text: string
   try {
@@ -114,10 +111,7 @@ async function readLastAddonVersion(fs: FileSystem, gameDir: string) {
  * updated by the launcher as soon as the client is patched, so it wins over
  * Config.wtf, which only changes after the game has been run.
  */
-export async function readClientInfo(
-  fs: FileSystem,
-  gameDir: string,
-): Promise<ClientInfo | null> {
+export async function readClientInfo(fs: FileSystem, gameDir: string): Promise<ClientInfo | null> {
   const product = await readFlavorId(fs, gameDir)
   if (product) {
     const version = (await readBuildInfo(fs, dirname(gameDir))).get(product)
@@ -131,10 +125,7 @@ export async function readClientInfo(
 }
 
 /** Flavor directories under a WoW install root, sorted by name. */
-export async function listFlavors(
-  fs: FileSystem,
-  root: string,
-): Promise<Flavor[]> {
+export async function listFlavors(fs: FileSystem, root: string): Promise<Flavor[]> {
   if (!(await isDirectory(fs, root))) return []
   const builds = await readBuildInfo(fs, root)
   const flavors: Flavor[] = []
@@ -170,18 +161,11 @@ export async function resolveGameDir(
 }
 
 /** Account directory names under WTF/Account, sorted. */
-export async function listAccounts(
-  fs: FileSystem,
-  gameDir: string,
-): Promise<string[]> {
+export async function listAccounts(fs: FileSystem, gameDir: string): Promise<string[]> {
   const dir = joinPath(gameDir, 'WTF', 'Account')
   if (!(await isDirectory(fs, dir))) return []
   return (await fs.readDir(dir))
-    .filter(
-      (entry) =>
-        entry.isDirectory &&
-        entry.name.toLowerCase() !== SHARED_SAVED_VARIABLES,
-    )
+    .filter((entry) => entry.isDirectory && entry.name.toLowerCase() !== SHARED_SAVED_VARIABLES)
     .map((entry) => entry.name)
     .sort()
 }

@@ -145,7 +145,8 @@ export function readCharacterSummaries(root: LuaTable): CharacterSummary[] {
         classFile: textField(info, 'class'),
         level: numberField(info, 'level'),
         faction: textField(info, 'faction'),
-        itemLevel: numberField(info, 'iLevel') ??
+        itemLevel:
+          numberField(info, 'iLevel') ??
           asNumber(characterData(root, 'PlayerItemsLevel', { realmId, name })),
       })
     }
@@ -153,7 +154,10 @@ export function readCharacterSummaries(root: LuaTable): CharacterSummary[] {
   return characters
 }
 
-function readRaids(instances: LuaNode | undefined, worldBosses: LuaNode | undefined): RaidLock[] | undefined {
+function readRaids(
+  instances: LuaNode | undefined,
+  worldBosses: LuaNode | undefined,
+): RaidLock[] | undefined {
   if (!asTable(instances) && !asTable(worldBosses)) return undefined
   const raids: RaidLock[] = []
   for (const [index, entry] of tableEntries(instances)) {
@@ -168,8 +172,10 @@ function readRaids(instances: LuaNode | undefined, worldBosses: LuaNode | undefi
     }
     raids.push({
       key: `raid:${index}`,
-      name: (isWorldBoss ? titanWorldBossNames : raidNames).get(id) ??
-        textField(entry, 'name') ?? (isWorldBoss ? '其他世界首领' : '其他副本'),
+      name:
+        (isWorldBoss ? titanWorldBossNames : raidNames).get(id) ??
+        textField(entry, 'name') ??
+        (isWorldBoss ? '其他世界首领' : '其他副本'),
       difficulty: difficultyNames.get(difficulty ?? 0),
       players: numberField(entry, 'num'),
       resetAt: resetTime(entry),
@@ -197,7 +203,9 @@ function readCurrencies(money: LuaNode | undefined): Currency[] {
     if (count === undefined) continue
     currencies.push({
       id,
-      name: textField(currency, 'name') || currencyNames.get(id) ||
+      name:
+        textField(currency, 'name') ||
+        currencyNames.get(id) ||
         (flag(currency, 'isItem') ? '其他代币' : '其他货币'),
       count,
       weekly: range(numberField(currency, 'weekCount'), numberField(currency, 'weekMax')),
@@ -220,16 +228,18 @@ function readEquipment(gear: LuaNode | undefined, bag: LuaNode | undefined): Equ
     const keyring = numberField(valueOf(bag, 'bagKey'), itemId)
     const bank = numberField(valueOf(bag, 'bank'), itemId)
     const mail = numberField(valueOf(bag, 'mail'), itemId)
-    const bags = carried !== undefined || keyring !== undefined ? (carried ?? 0) + (keyring ?? 0) : undefined
+    const bags =
+      carried !== undefined || keyring !== undefined ? (carried ?? 0) + (keyring ?? 0) : undefined
     equipment.push({
       slot,
       part,
       name,
       level: numberField(entry, 'level'),
       quality: numberField(entry, 'quality'),
-      storage: bags !== undefined || bank !== undefined || mail !== undefined
-        ? { bags, bank, mail }
-        : undefined,
+      storage:
+        bags !== undefined || bank !== undefined || mail !== undefined
+          ? { bags, bank, mail }
+          : undefined,
     })
   }
   return equipment.sort((a, b) => a.slot - b.slot)

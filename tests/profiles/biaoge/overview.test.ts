@@ -12,7 +12,9 @@ const now = 1_800_000_000_000
 describe('BGLite character overview', () => {
   it('joins real RoleOverview field shapes by character and keeps stored gold in gold units', async () => {
     const fs = new MemoryFileSystem()
-    fs.setFile(savedVariablesPath(gameDir, account, 'BGLite.lua'), `BiaoGe = {
+    fs.setFile(
+      savedVariablesPath(gameDir, account, 'BGLite.lua'),
+      `BiaoGe = {
       realmName = { [123] = "时光之穴", [124] = "永望镇" },
       playerInfo = {
         [123] = { ["星光"] = { class = "MAGE", level = 80, iLevel = 247.5, faction = "Horde" } },
@@ -44,7 +46,8 @@ describe('BGLite character overview', () => {
         alchemy_yanjiu = { endtime = 1800007200 }, alchemy_zhuanhua = { ready = true },
       } } },
       roleOverviewNote = { [123] = { ["星光"] = "|cffffffff主号|r" } },
-    }`)
+    }`,
+    )
 
     const { characters, modifiedAt } = await loadBiaoGeOverview(fs, gameDir, account)
     expect(modifiedAt).toBe(fs.clock)
@@ -52,12 +55,24 @@ describe('BGLite character overview', () => {
     expect(characters).toHaveLength(2)
     const [main, alt] = characters
     expect(main).toMatchObject({
-      account, realmId: 123, realm: '时光之穴', name: '星光', itemLevel: 247.5,
-      gold: 230407, restedXp: 120, note: '主号',
+      account,
+      realmId: 123,
+      realm: '时光之穴',
+      name: '星光',
+      itemLevel: 247.5,
+      gold: 230407,
+      restedXp: 120,
+      note: '主号',
       currencies: [{ name: '泰坦余烬', count: 12, weekly: '20 / 40' }],
-      equipment: [{
-        part: '主手', name: '星光之刃', level: 252, quality: 4, storage: { bags: 2, bank: 1 },
-      }],
+      equipment: [
+        {
+          part: '主手',
+          name: '星光之刃',
+          level: 252,
+          quality: 4,
+          storage: { bags: 2, bank: 1 },
+        },
+      ],
       reputation: [{ name: '赞达拉部族', standing: '尊敬', progress: '1 / 12,000' }],
       quests: [{ name: '钓鱼日常', unfinished: true }],
       professions: [
@@ -67,8 +82,15 @@ describe('BGLite character overview', () => {
     })
     expect(activeRaidLocks(main, now)).toMatchObject([
       {
-        name: '奥杜尔', difficulty: '英雄', players: 25, progress: '1 / 2', resetAt: 1_800_007_200_000,
-        bosses: [{ name: '烈焰巨兽', killed: true }, { name: '锋鳞', killed: false }],
+        name: '奥杜尔',
+        difficulty: '英雄',
+        players: 25,
+        progress: '1 / 2',
+        resetAt: 1_800_007_200_000,
+        bosses: [
+          { name: '烈焰巨兽', killed: true },
+          { name: '锋鳞', killed: false },
+        ],
       },
       { name: '末日行者' },
     ])
@@ -78,11 +100,14 @@ describe('BGLite character overview', () => {
 
   it('reads legacy money and a saved empty raid status', async () => {
     const fs = new MemoryFileSystem()
-    fs.setFile(savedVariablesPath(gameDir, account, 'BGLite.lua'), `BiaoGe = {
+    fs.setFile(
+      savedVariablesPath(gameDir, account, 'BGLite.lua'),
+      `BiaoGe = {
       playerInfo = { [123] = { Star = { level = 80 } } },
       Money = { [123] = { Star = { money = 340 } } },
       FBCD = { [123] = { Star = { { player = "Star" } } } },
-    }`)
+    }`,
+    )
 
     const { characters } = await loadBiaoGeOverview(fs, gameDir, account)
     expect(characters).toMatchObject([{ name: 'Star', gold: 340, raids: [] }])

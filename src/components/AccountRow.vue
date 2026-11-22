@@ -46,8 +46,7 @@ function classDot(character: Character): string {
 }
 
 function characterTitle(character: Character): string {
-  const className =
-    wowClasses[character.classFile ?? '']?.name ?? character.classFile ?? '未知职业'
+  const className = wowClasses[character.classFile ?? '']?.name ?? character.classFile ?? '未知职业'
   return character.itemLevel === undefined
     ? className
     : `${className} · 装等 ${character.itemLevel.toFixed(1)}`
@@ -68,9 +67,7 @@ function characterTitle(character: Character): string {
           <p class="truncate text-xs font-medium text-highlighted select-text">
             {{ account.id }}
           </p>
-          <UBadge v-if="synced" color="success" variant="subtle" size="sm">
-            已同步
-          </UBadge>
+          <UBadge v-if="synced" color="success" variant="subtle" size="sm"> 已同步 </UBadge>
         </div>
         <p
           class="truncate text-[11px]"
@@ -109,11 +106,9 @@ function characterTitle(character: Character): string {
               :class="classDot(character)"
             />
             <span>{{ character.name }}</span>
-            <span
-              v-if="character.level !== undefined"
-              class="tabular-nums text-dimmed"
-              >{{ character.level }}</span
-            >
+            <span v-if="character.level !== undefined" class="tabular-nums text-dimmed">{{
+              character.level
+            }}</span>
           </UBadge>
         </div>
       </div>

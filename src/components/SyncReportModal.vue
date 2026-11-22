@@ -37,12 +37,7 @@ const fileGroups = computed(() => {
 
 <template>
   <div>
-    <UEmpty
-      v-if="!lastActivity"
-      icon="i-lucide-history"
-      title="暂无同步记录"
-      size="sm"
-    />
+    <UEmpty v-if="!lastActivity" icon="i-lucide-history" title="暂无同步记录" size="sm" />
     <template v-else>
       <p class="text-sm font-medium text-highlighted">{{ heading }}</p>
       <p class="mt-0.5 text-xs text-muted">{{ summary }}</p>
@@ -65,16 +60,11 @@ const fileGroups = computed(() => {
             :key="failure.id"
             class="flex items-start gap-2 text-xs"
           >
-            <UIcon
-              name="i-lucide-circle-alert"
-              class="mt-0.5 size-3.5 shrink-0 text-warning"
-            />
+            <UIcon name="i-lucide-circle-alert" class="mt-0.5 size-3.5 shrink-0 text-warning" />
             <span class="min-w-0">
               <span class="font-medium text-highlighted">{{ failure.id }}</span>
               <span class="text-muted">：{{ failureLabels[failure.reason] }}</span>
-              <span class="block truncate text-dimmed select-text">{{
-                failure.detail
-              }}</span>
+              <span class="block truncate text-dimmed select-text">{{ failure.detail }}</span>
             </span>
           </li>
         </ul>
@@ -98,13 +88,7 @@ const fileGroups = computed(() => {
     </template>
 
     <div class="mt-5 flex justify-end">
-      <UButton
-        label="关闭"
-        color="neutral"
-        variant="ghost"
-        size="sm"
-        @click="closeModal"
-      />
+      <UButton label="关闭" color="neutral" variant="ghost" size="sm" @click="closeModal" />
     </div>
   </div>
 </template>

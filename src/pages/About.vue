@@ -62,9 +62,7 @@ async function openLogs() {
         <UBadge color="neutral" variant="subtle" size="sm" class="mt-1.5">
           版本 {{ version }}
         </UBadge>
-        <p class="mt-3 text-sm text-muted">
-          在多个魔兽世界账号之间同步插件数据。
-        </p>
+        <p class="mt-3 text-sm text-muted">在多个魔兽世界账号之间同步插件数据。</p>
       </div>
 
       <UAlert
