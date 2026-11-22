@@ -7,13 +7,15 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+node_modules/
+dist/
+dist-ssr/
+.vitest/
+.env*
 *.local
 
 # Editor directories and files
-.vscode/
+.vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
 .idea
@@ -34,4 +36,3 @@ docs/
 artifacts/
 *.pfx
 *.cer
-.vitest/
