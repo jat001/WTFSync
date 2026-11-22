@@ -84,6 +84,12 @@ export function keyValue(key: LuaKey): LuaKeyValue {
   return key.kind === 'positional' ? key.index : key.value
 }
 
+/** Iterate table entries with the same last-value semantics as fieldOf. */
+export function tableEntries(node: LuaNode | undefined): Map<LuaKeyValue, LuaNode> {
+  const fields = asTable(node)?.fields ?? []
+  return new Map(fields.map(({ key, value }) => [keyValue(key), value]))
+}
+
 function keyId(value: LuaKeyValue): string {
   return `${typeof value}:${value}`
 }

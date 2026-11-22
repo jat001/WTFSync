@@ -2,7 +2,7 @@ import {
   asNumber,
   asString,
   asTable,
-  keyValue,
+  tableEntries,
   valueOf,
   type LuaKeyValue,
   type LuaNode,
@@ -91,11 +91,6 @@ export interface OverviewCharacter extends CharacterSummary {
   quests: Quest[]
   professions: ProfessionCooldown[]
   reputation: Reputation[]
-}
-
-function tableEntries(node: LuaNode | undefined): Map<LuaKeyValue, LuaNode> {
-  const fields = asTable(node)?.fields ?? []
-  return new Map(fields.map(({ key, value }) => [keyValue(key), value]))
 }
 
 function numberField(node: LuaNode | undefined, key: LuaKeyValue): number | undefined {

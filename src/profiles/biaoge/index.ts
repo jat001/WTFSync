@@ -10,6 +10,7 @@ import {
   type LuaTable,
 } from '../../core/lua/ast'
 import { quoteLuaString } from '../../core/lua/string'
+import { basename } from '../../core/paths'
 import {
   ProfileDataError,
   type AccountSource,
@@ -20,6 +21,7 @@ import {
 import { fillTemplate } from '../../core/template'
 import { toCrlf } from '../../core/text'
 import { parseTocFiles } from '../../core/toc'
+import { readBills } from './bills'
 import { readCharacterSummaries, readOverview } from './overview'
 
 /**
@@ -77,6 +79,11 @@ export function readBiaoGeSave(source: AccountSource) {
 export async function loadBiaoGeOverview(fs: FileSystem, gameDir: string, id: string) {
   const { root, modifiedAt } = readBiaoGeSave(await loadAccountSourceWithRetry(fs, gameDir, biaoge, id))
   return { modifiedAt, characters: readOverview(root, id) }
+}
+
+export async function loadBiaoGeBills(fs: FileSystem, gameDir: string, id: string) {
+  const { root } = readBiaoGeSave(await loadAccountSourceWithRetry(fs, gameDir, biaoge, id))
+  return readBills(root, id, basename(gameDir))
 }
 
 /**

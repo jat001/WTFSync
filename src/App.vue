@@ -4,6 +4,7 @@ import { computed, ref, watch, type Component } from 'vue'
 import pkg from '../package.json'
 import AppLogo from './components/AppLogo.vue'
 import SyncReportModal from './components/SyncReportModal.vue'
+import { useBiaoGeBills } from './composables/useBiaoGeBills'
 import { useModal, type ModalKind } from './composables/useModal'
 import { useSettings, type ThemeMode } from './composables/useSettings'
 import { useSync } from './composables/useSync'
@@ -12,15 +13,17 @@ import { summarizeReport, triggerLabels } from './lib/sync-text'
 import { formatTime } from './lib/time'
 import { gameVersionName } from './lib/wow-flavors'
 import About from './pages/About.vue'
+import BiaoGeBills from './pages/BiaoGeBills.vue'
 import BiaoGeOverview from './pages/BiaoGeOverview.vue'
 import Home from './pages/Home.vue'
 import Setting from './pages/Setting.vue'
 
-type PageKey = 'home' | 'biaoge-overview' | 'setting' | 'about'
+type PageKey = 'home' | 'biaoge-overview' | 'biaoge-bills' | 'setting' | 'about'
 
 const pages: Record<PageKey, Component> = {
   home: Home,
   'biaoge-overview': BiaoGeOverview,
+  'biaoge-bills': BiaoGeBills,
   setting: Setting,
   about: About,
 }
@@ -30,6 +33,7 @@ const toast = useToast()
 const { settings } = useSettings()
 const { theme, cycleTheme } = useTheme()
 const { running, lastActivity, watchedAccounts, gameDir } = useSync()
+useBiaoGeBills()
 const { currentModal, openModal, closeModal } = useModal()
 
 const lastSyncText = computed(() => {
@@ -128,6 +132,7 @@ const navItems = [
     icon: 'i-lucide-layout-dashboard',
   },
   { key: 'biaoge-overview' as PageKey, label: '角色总览', icon: 'i-lucide-contact-round' },
+  { key: 'biaoge-bills' as PageKey, label: '金团账单', icon: 'i-lucide-receipt-text' },
   { key: 'setting' as PageKey, label: '设置', icon: 'i-lucide-settings-2' },
   { key: 'about' as PageKey, label: '关于', icon: 'i-lucide-circle-help' },
 ]
