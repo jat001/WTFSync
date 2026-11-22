@@ -38,7 +38,7 @@ export function dirname(path: string): string {
 }
 
 /** Comparable form: forward slashes, no trailing slash, case-folded on Windows. */
-function comparable(path: string): string {
+export function pathKey(path: string): string {
   const normalized = path.replace(/[\\/]+/g, '/').replace(/\/$/, '')
   return isWindowsPath(path) ? normalized.toLowerCase() : normalized
 }
@@ -50,7 +50,7 @@ function comparable(path: string): string {
 export function isInside(parent: string, child: string): boolean {
   const parts = child.split(SEPARATORS)
   if (parts.some((part) => part === '.' || part === '..')) return false
-  return comparable(child).startsWith(comparable(parent) + '/')
+  return pathKey(child).startsWith(pathKey(parent) + '/')
 }
 
 /** Whether `name` is usable as a single file name on Windows and Unix. */

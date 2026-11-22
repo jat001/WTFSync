@@ -53,6 +53,7 @@ export function buildInfoText(clients: readonly TestClient[]): string {
 }
 
 export interface TestGameOptions {
+  root?: string
   flavor?: string
   product?: string
   version?: string
@@ -60,18 +61,19 @@ export interface TestGameOptions {
 
 /**
  * Create an installed flavor (with `.flavor.info`, `WTF/Account` and
- * `Interface/AddOns`) under TEST_ROOT and return its directory.
+ * `Interface/AddOns`) and return its directory.
  */
 export function createGame(
   fs: MemoryFileSystem,
   {
+    root = TEST_ROOT,
     flavor = '_classic_titan_',
     product = 'wow_classic_titan',
     version = '3.80.2.12345',
   }: TestGameOptions = {},
 ): string {
-  const gameDir = joinPath(TEST_ROOT, flavor)
-  fs.setFile(joinPath(TEST_ROOT, '.build.info'), buildInfoText([{ product, version }]))
+  const gameDir = joinPath(root, flavor)
+  fs.setFile(joinPath(root, '.build.info'), buildInfoText([{ product, version }]))
   fs.setFile(joinPath(gameDir, '.flavor.info'), `Product Flavor!STRING:0\n${product}`)
   fs.makeDir(joinPath(gameDir, 'WTF', 'Account', 'SavedVariables'))
   fs.makeDir(joinPath(gameDir, 'Interface', 'AddOns'))

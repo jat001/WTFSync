@@ -2,6 +2,7 @@ import { Store } from '@tauri-apps/plugin-store'
 import { reactive, watch } from 'vue'
 import { z } from 'zod'
 
+import { joinPath, pathKey } from '../core/paths'
 import { allowFsDirectories } from '../lib/fs'
 import { isTauri } from '../lib/tauri'
 
@@ -20,8 +21,8 @@ export const settingsSchema = z.object({
   flavor: z.string().catch(''),
   // Resync whenever a selected account's SavedVariables change.
   autoSync: z.boolean().catch(true),
-  // Selected accounts keyed by `${flavor}/${profileId}`. A missing key means
-  // the user never chose, so a previous tool's selection may be imported.
+  // Selected accounts keyed by the full game directory and profile ID.
+  // A missing key lets the sync layer import a selection from existing output.
   selections: z.record(z.string(), z.array(z.string())).catch({}),
 })
 
@@ -42,6 +43,26 @@ function getStore(): Promise<Store> {
   return storePromise
 }
 
+export function accountSelectionKey(gameDir: string, profileId: string): string {
+  return `${pathKey(gameDir)}/${profileId}`
+}
+
+/** Legacy selections had no install path. Assign them to the saved root. */
+function migrateSelections(value: Settings): Settings {
+  const selections = { ...value.selections }
+  for (const [key, ids] of Object.entries(value.selections)) {
+    const legacy = /^(_[^/]+_)\/([^/]+)$/.exec(key)
+    if (!legacy) continue
+    const [, flavor, profileId] = legacy
+    if (value.wowRoot) {
+      const gameDir = joinPath(value.wowRoot, flavor)
+      selections[accountSelectionKey(gameDir, profileId)] ??= ids
+    }
+    delete selections[key]
+  }
+  return { ...value, selections }
+}
+
 /** Read & validate the persisted settings, falling back to defaults. */
 async function readPersisted(): Promise<Settings> {
   let raw: unknown = null
@@ -56,7 +77,7 @@ async function readPersisted(): Promise<Settings> {
       // Corrupted data is treated as absent.
     }
   }
-  return settingsSchema.parse(raw ?? {})
+  return migrateSelections(settingsSchema.parse(raw ?? {}))
 }
 
 async function writePersisted(value: Settings): Promise<void> {

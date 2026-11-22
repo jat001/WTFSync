@@ -29,6 +29,7 @@ const {
   lastActivity,
   watchedAccounts,
   watchError,
+  canSyncProfile,
   selectedAccounts,
   toggleAccount,
   refresh,
@@ -69,7 +70,7 @@ const canSync = computed(
     isTauri &&
     !!gameDir.value &&
     !running.value &&
-    (selected.value.size > 0 || synced.value.size > 0),
+    canSyncProfile(profile.value),
 )
 
 const stats = computed(() => {
