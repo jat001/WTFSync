@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prepare": "vp config --hooks --no-agent",
     "dev": "vp dev",
     "build": "vp build && vue-tsc --noEmit",
     "preview": "vp preview",

@@ -9,7 +9,9 @@ const host = process.env.TAURI_DEV_HOST
 // https://vite.dev/config/
 export default defineConfig({
   // Node tests do not need the application's Vue and UI plugins.
-  plugins: process.env.VITEST ? [] : lazyPlugins(() => [vue(), ui({ router: false }), vueDevTools()]),
+  plugins: process.env.VITEST
+    ? []
+    : lazyPlugins(() => [vue(), ui({ router: false }), vueDevTools()]),
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
@@ -34,11 +36,6 @@ export default defineConfig({
   },
   test: {
     include: ['tests/**/*.test.ts'],
-    environment: 'node',
-  },
-  check: {
-    // Formatting is opt-in for this repository.
-    fmt: false,
   },
   fmt: {
     semi: false,
@@ -49,5 +46,9 @@ export default defineConfig({
       typeAware: true,
       typeCheck: true,
     },
+  },
+  staged: {
+    '*.{js,jsx,mjs,cjs,ts,tsx,mts,cts,vue}': 'vp check --fix --deny-warnings',
+    '*.{css,html,json,jsonc,md,toml,yaml,yml}': 'vp fmt --write --no-error-on-unmatched-pattern',
   },
 })
