@@ -1,0 +1,71 @@
+// Instance, currency and cooldown identifiers used by RoleOverview.
+export const raidNames = new Map<number, string>([
+  [48, '黑暗深渊'], [90, '诺莫瑞根'], [109, '沉没的神庙'],
+  [249, '奥妮克希亚的巢穴'], [309, '祖尔格拉布'], [409, '熔火之心'],
+  [469, '黑翼之巢'], [509, '安其拉废墟'], [531, '安其拉神殿'],
+  [532, '卡拉赞'], [533, '纳克萨玛斯'], [534, '海加尔山'],
+  [544, '玛瑟里顿的巢穴'], [548, '毒蛇神殿'], [550, '风暴要塞'],
+  [564, '黑暗神殿'], [565, '格鲁尔的巢穴'], [568, '祖阿曼'],
+  [580, '太阳之井高地'], [603, '奥杜尔'], [615, '黑曜石圣殿'],
+  [616, '永恒之眼'], [624, '阿尔卡冯的宝库'], [631, '冰冠堡垒'],
+  [649, '十字军的试炼'], [669, '黑翼血环'], [671, '暮光堡垒'],
+  [720, '火焰之地'], [724, '红玉圣殿'], [754, '风神王座'],
+  [757, '巴拉丁监狱'], [967, '巨龙之魂'], [996, '永春台'],
+  [1008, '魔古山宝库'], [1009, '恐惧之心'], [1098, '雷电王座'],
+  [1136, '决战奥格瑞玛'], [2789, '卡扎克'], [2791, '艾索雷葛斯'],
+  [2804, '桑德兰王子'],
+])
+
+export const titanWorldBossNames = new Map([
+  [116, '艾索雷葛斯'], [117, '卡扎克'], [118, '末日领主卡扎克'], [119, '末日行者'],
+])
+
+export const worldBossNames = new Map([
+  ['worldBoss1', '炮舰'], ['worldBoss2', '怒之煞'], ['worldBoss3', '暴风领主纳拉克'],
+  ['worldBoss4', '乌达斯塔'], ['worldBoss5', '四天神'], ['worldBoss6', '野牛人斡耳朵斯'],
+])
+
+export const difficultyNames = new Map([
+  [3, '普通'], [4, '普通'], [5, '英雄'], [6, '英雄'],
+  [14, '普通'], [15, '英雄'], [16, '史诗'],
+])
+
+export const currencyNames = new Map([
+  [42, '公正徽章'], [61, '达拉然珠宝匠硬币'], [81, '达拉然烹饪奖牌'],
+  [101, '英雄纹章'], [161, '岩石守卫者的碎片'], [241, '冠军的徽记'],
+  [390, '征服点数'], [395, '正义点数'], [396, '勇气点数'],
+  [402, '铁掌徽记'], [515, '暗月奖券'], [697, '长者的好运符'], [738, '次级好运护符'],
+  [752, '魔古命运符文'], [776, '战火徽记'], [777, '永恒铸币'],
+  [1900, '竞技场点数'], [1901, '荣誉点数'], [2589, '赛德精华'], [2711, '天灾石'],
+  [3350, '至尊石碎片'], [3403, '泰坦余烬'], [3406, '泰坦碎片'], [3407, '白金硬币'],
+  [3414, '至尊石碎块'], [3416, '至尊石聚簇'], [29434, '公正徽章'],
+  [50274, '影霜碎片'], [247796, '战斗的奖励'], [256883, '正义奖章'],
+])
+
+export const taskNames = new Map([
+  ['dayQuestCount', '日常任务'], ['week1', '周常任务'], ['week2', '祖尔格拉布周常'],
+  ['zhubao', '珠宝日常'], ['cooking', '烹饪日常'], ['fish', '钓鱼日常'],
+  ['holiday', '节日副本'], ['gamma', '伽马日常'], ['heroe', '英雄日常'],
+])
+
+export const professionNames = new Map([
+  ['alchemy', '炼金转化'], ['alchemy_yanjiu', '炼金研究'], ['alchemy_zhuanhua', '炼金转化'],
+  ['inscription_dadiaowen', '大雕文研究'], ['inscription_xiaodiaowen', '小雕文研究'],
+  ['jewelcrafting_bingdonglingzhu', '冰冻棱柱'], ['jewelcrafting_yanjiu', '珠宝研究'],
+  ['forge_taitanjinggang', '泰坦精钢'], ['leatherworking', '制皮筛盐'],
+  ['tailor', '裁缝洗布'], ['tailor_fawenbu', '法纹布'], ['tailor_wuwenbu', '乌纹布'],
+  ['tailor_yueyingbu', '月影布'], ['tailor_bingchuanbeibao', '冰川背包'],
+  ['forge_piligangding', '霹雳钢锭'], ['enchanting_xieshashuijing', '邪煞水晶'],
+  ['inscription_zhihuijuanzhou', '智慧卷轴'], ['jewelcrafting_shenlongzhixin', '神龙之心'],
+  ['leatherworking_hualizhipi', '华丽制皮'], ['tailoring_diwangsichou', '帝王丝绸'],
+  ['engineering_jiade', '贾德的特制能量源'],
+])
+
+export const equipmentSlots = [
+  '头部', '颈部', '肩部', '衬衣', '胸部', '腰部', '腿部', '脚部', '手腕', '手部',
+  '戒指一', '戒指二', '饰品一', '饰品二', '背部', '主手', '副手', '远程', '战袍',
+]
+
+export const standings = [
+  '仇恨', '敌对', '冷淡', '中立', '友善', '尊敬', '崇敬', '崇拜',
+]

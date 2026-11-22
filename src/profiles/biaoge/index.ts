@@ -1,14 +1,11 @@
 import loaderTemplate from '../../../addons/BiaoGeAccounts/BiaoGeAccounts.lua?raw'
 import tocTemplate from '../../../addons/BiaoGeAccounts/BiaoGeAccounts.toc?raw'
-import { isValidAccountName } from '../../core/accounts'
+import { isValidAccountName, loadAccountSourceWithRetry } from '../../core/accounts'
+import type { FileSystem } from '../../core/fs'
 import {
-  asNumber,
-  asString,
   asTable,
   fieldOf,
-  keyValue,
   sourceText,
-  valueOf,
   type LuaChunk,
   type LuaTable,
 } from '../../core/lua/ast'
@@ -23,6 +20,7 @@ import {
 import { fillTemplate } from '../../core/template'
 import { toCrlf } from '../../core/text'
 import { parseTocFiles } from '../../core/toc'
+import { readCharacterSummaries, readOverview } from './overview'
 
 /**
  * BGLite stores account data in the `BiaoGe` SavedVariables table. Its
@@ -67,13 +65,18 @@ function listedAccounts(toc: string): string[] {
     .filter(isValidAccountName)
 }
 
-function biaoGeTable(source: AccountSource): { chunk: LuaChunk; root: LuaTable } {
-  const chunk = source.files.get(SOURCE_FILE)?.chunk
-  const root = asTable(chunk?.globals.get(GLOBAL_NAME))
-  if (!chunk || !root) {
+export function readBiaoGeSave(source: AccountSource) {
+  const file = source.files.get(SOURCE_FILE)
+  const root = asTable(file?.chunk.globals.get(GLOBAL_NAME))
+  if (!file || !root) {
     throw new ProfileDataError(`${SOURCE_FILE} does not define ${GLOBAL_NAME}`)
   }
-  return { chunk, root }
+  return { ...file, root }
+}
+
+export async function loadBiaoGeOverview(fs: FileSystem, gameDir: string, id: string) {
+  const { root, modifiedAt } = readBiaoGeSave(await loadAccountSourceWithRetry(fs, gameDir, biaoge, id))
+  return { modifiedAt, characters: readOverview(root, id) }
 }
 
 /**
@@ -123,29 +126,8 @@ export function renderToc(
 }
 
 function summarize(source: AccountSource): Character[] {
-  const { root } = biaoGeTable(source)
-  const playerInfo = asTable(valueOf(root, 'playerInfo'))
-  const realmNames = asTable(valueOf(root, 'realmName'))
-  const characters: Character[] = []
-  for (const realmField of playerInfo?.fields ?? []) {
-    const realmId = keyValue(realmField.key)
-    if (typeof realmId !== 'number') continue
-    const realm = asString(valueOf(realmNames, realmId)) ?? String(realmId)
-    for (const playerField of asTable(realmField.value)?.fields ?? []) {
-      const name = keyValue(playerField.key)
-      if (typeof name !== 'string') continue
-      const info = asTable(playerField.value)
-      characters.push({
-        realm,
-        name,
-        classFile: asString(valueOf(info, 'class')),
-        level: asNumber(valueOf(info, 'level')),
-        faction: asString(valueOf(info, 'faction')),
-        itemLevel: asNumber(valueOf(info, 'iLevel')),
-      })
-    }
-  }
-  return characters
+  const { root } = readBiaoGeSave(source)
+  return readCharacterSummaries(root).map(({ realmId: _realmId, ...character }) => character)
 }
 
 function syncedAccounts(existing: ExistingOutput): string[] {
@@ -164,7 +146,7 @@ export const biaoge: AddonProfile<string> = {
   summarize,
 
   prepare(source) {
-    const { chunk, root } = biaoGeTable(source)
+    const { chunk, root } = readBiaoGeSave(source)
     return renderAccountFile(source.id, chunk, root)
   },
 

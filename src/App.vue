@@ -10,14 +10,17 @@ import { useSync } from './composables/useSync'
 import { useTheme } from './composables/useTheme'
 import { summarizeReport, triggerLabels } from './lib/sync-text'
 import { formatTime } from './lib/time'
+import { gameVersionName } from './lib/wow-flavors'
 import About from './pages/About.vue'
+import BiaoGeOverview from './pages/BiaoGeOverview.vue'
 import Home from './pages/Home.vue'
 import Setting from './pages/Setting.vue'
 
-type PageKey = 'home' | 'setting' | 'about'
+type PageKey = 'home' | 'biaoge-overview' | 'setting' | 'about'
 
 const pages: Record<PageKey, Component> = {
   home: Home,
+  'biaoge-overview': BiaoGeOverview,
   setting: Setting,
   about: About,
 }
@@ -124,6 +127,7 @@ const navItems = [
     label: '工作台',
     icon: 'i-lucide-layout-dashboard',
   },
+  { key: 'biaoge-overview' as PageKey, label: '角色总览', icon: 'i-lucide-contact-round' },
   { key: 'setting' as PageKey, label: '设置', icon: 'i-lucide-settings-2' },
   { key: 'about' as PageKey, label: '关于', icon: 'i-lucide-circle-help' },
 ]
@@ -240,7 +244,7 @@ function isActive(key: PageKey) {
         <span class="min-w-0 truncate">上次同步：{{ lastSyncText }}</span>
         <span class="flex-1" />
         <span class="min-w-0 truncate" :title="gameDir">{{
-          settings.flavor || '未设置游戏目录'
+          gameVersionName(settings.flavor) || '未设置游戏目录'
         }}</span>
         <span class="flex h-3 items-center">
           <USeparator orientation="vertical" />

@@ -6,6 +6,7 @@ import { useSettings } from '../composables/useSettings'
 import { useSync } from '../composables/useSync'
 import { openDirectory } from '../lib/open'
 import { isTauri } from '../lib/tauri'
+import { gameVersionItems } from '../lib/wow-flavors'
 
 const toast = useToast()
 const { settings, reset } = useSettings()
@@ -32,15 +33,7 @@ const themeOptions = [
   { label: '深色', value: 'dark' },
 ]
 
-const flavorItems = computed(() =>
-  flavors.value.map((flavor) => {
-    const detail = flavor.version ?? flavor.id
-    return {
-      label: detail ? `${flavor.dir}（${detail}）` : flavor.dir,
-      value: flavor.dir,
-    }
-  }),
-)
+const flavorItems = computed(() => gameVersionItems(flavors.value, true))
 
 async function openGameDir() {
   if (!isTauri) return

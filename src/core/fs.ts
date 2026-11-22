@@ -64,6 +64,8 @@ export interface AtomicWriteOptions {
   attempts?: number
   delayMs?: number
   sleep?: (ms: number) => Promise<void>
+  /** Recheck the destination immediately before each replacement attempt. */
+  beforeReplace?: () => Promise<void>
 }
 
 /**
@@ -76,20 +78,23 @@ export async function writeFileAtomic(
   fs: FileSystem,
   path: string,
   data: Uint8Array,
-  { attempts = 3, delayMs = 200, sleep: wait = sleep }: AtomicWriteOptions = {},
+  { attempts = 3, delayMs = 200, sleep: wait = sleep, beforeReplace }: AtomicWriteOptions = {},
 ): Promise<void> {
   const temp = path + TEMP_SUFFIX
-  await fs.writeFile(temp, data)
-  for (let attempt = 1; ; attempt++) {
-    try {
-      await fs.rename(temp, path)
-      return
-    } catch (error) {
-      if (attempt >= attempts) {
-        await fs.remove(temp).catch(() => {})
-        throw error
+  try {
+    await fs.writeFile(temp, data)
+    for (let attempt = 1; ; attempt++) {
+      await beforeReplace?.()
+      try {
+        await fs.rename(temp, path)
+        return
+      } catch (error) {
+        if (attempt >= attempts) throw error
+        await wait(delayMs)
       }
-      await wait(delayMs)
     }
+  } catch (error) {
+    await fs.remove(temp).catch(() => {})
+    throw error
   }
 }

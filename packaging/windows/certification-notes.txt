@@ -10,7 +10,7 @@ Copy the PowerShell snippet below into a Windows PowerShell session to create a 
 6. Close and reopen the app. The selected directory, accounts and automatic sync setting should persist. Startup synchronization should report that the files are current.
 7. The privacy policy is available in About (关于) > Privacy policy (隐私政策).
 
-Viewing synchronized characters in the game requires World of Warcraft, BGLite, and BGLite_RoleOverview. After a game reload, the synchronized characters appear in Role Overview (/bgr). WTFSync opens source SavedVariables files in read-only mode. Keep the synthetic review fixture in its own directory.
+Viewing synchronized characters in the game requires World of Warcraft, BGLite, and a Role Overview addon that reads BiaoGeAccounts. WTFSync reads source SavedVariables when viewing or syncing characters. Confirming character-record deletion in the app backs up that account's source file in its SavedVariables directory before updating it. Keep the synthetic review fixture in its own directory.
 
 runFullTrust rationale:
 WTFSync is a Tauri desktop application that runs as a normal user. It needs to read and watch addon SavedVariables under a user-selected game directory and create or replace its generated BiaoGeAccounts files under Interface/AddOns, outside the MSIX installation folder. It also stores local configuration in application data and can open the selected directory in the system file manager. No administrator privileges, elevation, services, kernel components or remote account synchronization are used.

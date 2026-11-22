@@ -11,6 +11,7 @@ import { openDirectory } from '../lib/open'
 import { summarizeReport, triggerLabels } from '../lib/sync-text'
 import { isTauri } from '../lib/tauri'
 import { formatTime } from '../lib/time'
+import { gameVersionItems } from '../lib/wow-flavors'
 import { defaultProfile, findProfile } from '../profiles'
 
 const toast = useToast()
@@ -49,9 +50,7 @@ const profileId = computed({
   },
 })
 
-const flavorItems = computed(() =>
-  flavors.value.map((flavor) => ({ label: flavor.dir, value: flavor.dir })),
-)
+const flavorItems = computed(() => gameVersionItems(flavors.value))
 
 const status = computed(() => statuses.value[profile.value.id])
 const selected = computed(() => new Set(selectedAccounts(profile.value)))
