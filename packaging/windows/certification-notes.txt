@@ -1,4 +1,4 @@
-WTFSync is a local desktop utility for synchronizing World of Warcraft addon data between accounts on the same computer. The current version supports BiaoGe. The application does not require a Battle.net login or any account password.
+WTFSync is a local desktop utility for synchronizing World of Warcraft addon data between accounts on the same computer. The current version supports BGLite. The application does not require a Battle.net login or any account password.
 
 Offline review:
 Copy the PowerShell snippet below into a Windows PowerShell session to create a minimal synthetic game directory. It contains two made-up accounts and characters, with no real SavedVariables. It refuses to overwrite an existing directory. The sample is a directory fixture, not a game installation.
@@ -6,11 +6,11 @@ Copy the PowerShell snippet below into a Windows PowerShell session to create a 
 2. On Workbench (工作台), select accounts 100000001#1 and 100000002#2, then click Sync now (立即同步).
 3. Verify four generated files in _classic_titan_/Interface/AddOns/BiaoGeAccounts: two account Lua files, a loader and a TOC. The Interface value is read from the synthetic client's version.
 4. Repeating sync without source changes preserves file content and modification times.
-5. With automatic sync enabled and the application open, edit a character level in either synthetic SavedVariables/BiaoGe.lua file and save. That account output should update after the debounce interval.
+5. With automatic sync enabled and the application open, edit a character level in either synthetic SavedVariables/BGLite.lua file and save. That account output should update after the debounce interval.
 6. Close and reopen the app. The selected directory, accounts and automatic sync setting should persist. Startup synchronization should report that the files are current.
 7. The privacy policy is available in About (关于) > Privacy policy (隐私政策).
 
-Live game use requires a local World of Warcraft installation and BiaoGe. Source SavedVariables files are read-only to WTFSync. Generated output becomes visible in BiaoGe after a game reload. Do not copy the synthetic review fixture into a real game installation.
+Viewing synchronized characters in the game requires World of Warcraft, BGLite, and BGLite_RoleOverview. After a game reload, the synchronized characters appear in Role Overview (/bgr). WTFSync opens source SavedVariables files in read-only mode. Keep the synthetic review fixture in its own directory.
 
 runFullTrust rationale:
 WTFSync is a Tauri desktop application that runs as a normal user. It needs to read and watch addon SavedVariables under a user-selected game directory and create or replace its generated BiaoGeAccounts files under Interface/AddOns, outside the MSIX installation folder. It also stores local configuration in application data and can open the selected directory in the system file manager. No administrator privileges, elevation, services, kernel components or remote account synchronization are used.
@@ -34,10 +34,10 @@ function Put([string]$RelativePath, [string]$Text) {
 }
 Put '.build.info' "Active!DEC:1|Version!STRING:0|Product!STRING:0`n1|3.80.2.12345|wow_classic_titan`n"
 Put '_classic_titan_/.flavor.info' "Product Flavor!STRING:0`nwow_classic_titan`n"
-Put '_classic_titan_/Interface/AddOns/BiaoGe/BiaoGe.toc' "## Title: Synthetic review fixture`n"
+Put '_classic_titan_/Interface/AddOns/BGLite/BGLite.toc' "## Title: Synthetic review fixture`n"
 foreach ($id in '100000001#1','100000002#2') {
     $character = if ($id -eq '100000001#1') { 'SampleOne' } else { 'SampleTwo' }
-    Put "_classic_titan_/WTF/Account/$id/SavedVariables/BiaoGe.lua" @"
+    Put "_classic_titan_/WTF/Account/$id/SavedVariables/BGLite.lua" @"
 BiaoGe = {
     ["realmName"] = { [4533] = "SampleRealm" },
     ["playerInfo"] = { [4533] = { ["$character"] = {

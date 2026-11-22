@@ -17,7 +17,7 @@ function accountSource(id: string, text: string): AccountSource {
   return {
     id,
     files: new Map([
-      ['BiaoGe.lua', { chunk: parseSavedVariables(text), modifiedAt: null }],
+      ['BGLite.lua', { chunk: parseSavedVariables(text), modifiedAt: null }],
     ]),
   }
 }
@@ -57,7 +57,7 @@ describe('EXPORT_KEYS', () => {
   })
 })
 
-describe('biaoge profile', () => {
+describe('BGLite profile', () => {
   it('writes account files in the BiaoGeUpdater format', () => {
     for (let seed = 1; seed <= 30; seed++) {
       const account = generateAccount(`10000000${seed}#1`, seed)
@@ -68,7 +68,7 @@ describe('biaoge profile', () => {
 
   it('rejects files without the BiaoGe table', () => {
     expect(() => biaoge.prepare(accountSource('1#1', 'Other = {}'))).toThrow(
-      'does not define BiaoGe',
+      'BGLite.lua does not define BiaoGe',
     )
   })
 
@@ -90,6 +90,7 @@ describe('biaoge profile', () => {
     const toc = renderToc(['1#1.lua', '2#1.lua'], CLIENT.interfaceVersion)
     expect(toc).toBe(expectedToc(['1#1.lua', '2#1.lua']))
     expect(toc).toContain('\r\n## Interface: 38002\r\n')
+    expect(toc).toContain('\r\n## RequiredDeps: BGLite\r\n')
     expect(toc).not.toContain('{{')
   })
 
@@ -117,27 +118,36 @@ describe('biaoge profile', () => {
     expect(biaoge.syncedAccounts?.(existing)).toEqual(['1#1', '2#1', '3#1'])
   })
 
-  it('syncs generated accounts end to end', async () => {
+  it('syncs BGLite accounts and upgrades the existing output in place', async () => {
     const fs = new MemoryFileSystem()
     const gameDir = createGame(fs, { version: CLIENT.version })
-    fs.setFile(`${gameDir}\\Interface\\AddOns\\BiaoGe\\BiaoGe.toc`, '')
+    fs.setFile(
+      `${gameDir}\\Interface\\AddOns\\BGLite\\BGLite.toc`,
+      '## SavedVariables: BiaoGe',
+    )
     const accounts = [11, 12, 13].map((seed) => generateAccount(`2000000${seed}#1`, seed))
     for (const account of accounts) {
-      fs.setFile(savedVariablesPath(gameDir, account.id, 'BiaoGe.lua'), account.source)
+      fs.setFile(savedVariablesPath(gameDir, account.id, 'BGLite.lua'), account.source)
+      fs.setFile(savedVariablesPath(gameDir, account.id, 'BiaoGe.lua'), 'BiaoGe = {}')
     }
     const ids = accounts.map((account) => account.id)
+    const accountFiles = ids.map((id) => `${id}.lua`)
     const task = { gameDir, profile: biaoge, accounts: ids }
+    const out = `${gameDir}\\Interface\\AddOns\\BiaoGeAccounts`
+    const tocPath = `${out}\\BiaoGeAccounts.toc`
+    fs.setFile(
+      tocPath,
+      expectedToc(accountFiles).replace('## RequiredDeps: BGLite', '## RequiredDeps: BiaoGe'),
+    )
 
     const report = await runSync(fs, task, 'manual')
+    expect(report.profileId).toBe('biaoge')
     expect(report.failed).toEqual([])
-    const out = `${gameDir}\\Interface\\AddOns\\BiaoGeAccounts`
     for (const account of accounts) {
       expect(fs.getText(`${out}\\${account.id}.lua`)).toBe(expectedAccountFile(account))
     }
     expect(fs.getText(`${out}\\BiaoGeAccounts.lua`)).toBe(toCrlf(loaderTemplate))
-    expect(fs.getText(`${out}\\BiaoGeAccounts.toc`)).toBe(
-      expectedToc(ids.map((id) => `${id}.lua`)),
-    )
+    expect(fs.getText(tocPath)).toBe(expectedToc(accountFiles))
 
     const again = await runSync(fs, task, 'manual')
     expect(again.written).toEqual([])

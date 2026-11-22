@@ -9,10 +9,10 @@ function Put([string]$RelativePath, [string]$Text) {
 }
 Put '.build.info' "Active!DEC:1|Version!STRING:0|Product!STRING:0`n1|3.80.2.12345|wow_classic_titan`n"
 Put '_classic_titan_/.flavor.info' "Product Flavor!STRING:0`nwow_classic_titan`n"
-Put '_classic_titan_/Interface/AddOns/BiaoGe/BiaoGe.toc' "## Title: Synthetic review fixture`n"
+Put '_classic_titan_/Interface/AddOns/BGLite/BGLite.toc' "## Title: Synthetic review fixture`n"
 foreach ($id in '100000001#1','100000002#2') {
     $character = if ($id -eq '100000001#1') { 'SampleOne' } else { 'SampleTwo' }
-    Put "_classic_titan_/WTF/Account/$id/SavedVariables/BiaoGe.lua" @"
+    Put "_classic_titan_/WTF/Account/$id/SavedVariables/BGLite.lua" @"
 BiaoGe = {
     ["realmName"] = { [4533] = "SampleRealm" },
     ["playerInfo"] = { [4533] = { ["$character"] = {

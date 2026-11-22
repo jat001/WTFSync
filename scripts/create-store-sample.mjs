@@ -28,16 +28,16 @@ async function put(relativePath, text) {
 }
 await put('.build.info', 'Active!DEC:1|Version!STRING:0|Product!STRING:0\n1|3.80.2.12345|wow_classic_titan\n')
 await put('_classic_titan_/.flavor.info', 'Product Flavor!STRING:0\nwow_classic_titan\n')
-await put('_classic_titan_/Interface/AddOns/BiaoGe/BiaoGe.toc', '## Title: Synthetic test fixture; not a playable addon\n')
+await put('_classic_titan_/Interface/AddOns/BGLite/BGLite.toc', '## Title: Synthetic test fixture; not a playable addon\n')
 const accounts = [['100000001#1', 11], ['100000002#2', 12]]
 for (const [id, seed] of accounts) {
-  await put(`_classic_titan_/WTF/Account/${id}/SavedVariables/BiaoGe.lua`, generateAccount(id, seed).source)
+  await put(`_classic_titan_/WTF/Account/${id}/SavedVariables/BGLite.lua`, generateAccount(id, seed).source)
 }
 await put('README.txt', [
   'WTFSync 离线审核示例',
   '',
   '所有账号、角色和物品数据均由测试生成器编造，不含真实用户存档。',
-  '这是测试目录，不是游戏安装包；其中的 BiaoGe.toc 仅用于目录识别。',
+  '这是测试目录，其中的 BGLite.toc 仅用于目录识别。',
   '不要将这个示例复制到真实游戏目录。',
   '',
   '1. 解压后，在 WTFSync 的设置 > 游戏中选择本 WorldOfWarcraft 目录。',
@@ -51,17 +51,17 @@ await put('README-en.txt', [
   'WTFSync offline review sample',
   '',
   'All account, character and item data are synthetic. No real user SavedVariables are included.',
-  'This is not a game installation. The placeholder BiaoGe.toc only enables directory recognition.',
+  'The placeholder BGLite.toc enables WTFSync to recognize this test directory.',
   '',
   '1. Extract this archive to a writable local folder.',
   '2. In WTFSync, open Settings (设置) > Game (游戏), then select the extracted WorldOfWarcraft folder.',
   '3. Return to Workbench (工作台), select both accounts, and click Sync now (立即同步).',
   '4. Verify the Lua files and TOC in _classic_titan_/Interface/AddOns/BiaoGeAccounts.',
   '5. Repeating sync without a data change should report that files are already current.',
-  '6. With automatic sync enabled and the app open, change a character level in a synthetic BiaoGe.lua and save.',
+  '6. With automatic sync enabled and the app open, change a character level in a synthetic BGLite.lua and save.',
   '7. Output should update shortly afterwards. Settings should persist after closing and reopening the app.',
   '',
-  'Do not copy this fixture into a real game installation. Live game use requires World of Warcraft and BiaoGe.',
+  'Keep this fixture in its own directory. Viewing synchronized characters in the game requires World of Warcraft, BGLite, and BGLite_RoleOverview.',
   'WTFSync does not require Battle.net login credentials.',
   '',
 ].join('\r\n'))

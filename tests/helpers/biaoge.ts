@@ -10,8 +10,8 @@ import { createRandom, type Random } from './random'
 import { EXPORT_KEYS } from '../../src/profiles/biaoge/index'
 
 /**
- * Generates BiaoGe.lua files with made-up accounts and characters, shaped
- * like real BiaoGe data and written the way WoW serializes it, plus the
+ * Generates BGLite.lua files with made-up accounts and characters, shaped
+ * like the real BiaoGe table and written the way WoW serializes it, plus the
  * account file BiaoGeUpdater produces for them.
  */
 
@@ -34,7 +34,7 @@ export interface GeneratedCharacter {
 
 export interface GeneratedAccount {
   id: string
-  /** Contents of BiaoGe.lua. */
+  /** Contents of BGLite.lua. */
   source: string
   characters: GeneratedCharacter[]
   /** Exported top-level fields by key, as written in `source`. */

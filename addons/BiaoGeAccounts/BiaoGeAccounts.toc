@@ -1,10 +1,10 @@
 
 ## Interface: {{INTERFACE}}
 ## Title: <BiaoGeAccounts> |cff00BFFF同步模块|r
-## Notes: 该模块由WTFSync生成，使BiaoGe的角色总览可以显示全战网全账号角色。
-## IconTexture: Interface\AddOns\BiaoGe\Media\icon\icon.tga
+## Notes: 该模块由 WTFSync 生成，供 BGLite 的夜月扩展包在角色总览中显示其他本地账号的角色。
+## IconTexture: Interface\AddOns\BGLite\Media\icon\icon.tga
 ## Author: WTFSync
-## RequiredDeps: BiaoGe
+## RequiredDeps: BGLite
 ## Version: 3.0.0
 
 BiaoGeAccounts.lua

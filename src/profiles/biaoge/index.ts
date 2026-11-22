@@ -25,15 +25,12 @@ import { toCrlf } from '../../core/text'
 import { parseTocFiles } from '../../core/toc'
 
 /**
- * BiaoGe keeps every character overview in its account-wide SavedVariables.
- * The original BiaoGeUpdater tool copies selected top-level fields of each
- * account's `BiaoGe` table into a generated `BiaoGeAccounts` addon, whose
- * loader merges them so the role overview can list characters of all
- * accounts. This profile reproduces that output, using the loader and toc
- * in addons/BiaoGeAccounts as templates.
+ * BGLite stores account data in the `BiaoGe` SavedVariables table. Its
+ * RoleOverview extension reads the existing `BiaoGeAccounts` format for
+ * data from other accounts, so this profile reuses that loader and format.
  */
 
-const SOURCE_FILE = 'BiaoGe.lua'
+const SOURCE_FILE = 'BGLite.lua'
 const GLOBAL_NAME = 'BiaoGe'
 const LOADER_FILE = 'BiaoGeAccounts.lua'
 const TOC_FILE = 'BiaoGeAccounts.toc'
@@ -157,9 +154,10 @@ function syncedAccounts(existing: ExistingOutput): string[] {
 }
 
 export const biaoge: AddonProfile<string> = {
+  // Keep the stored profile ID so existing account selections still apply.
   id: 'biaoge',
-  name: 'BiaoGe 金团表格',
-  requiredAddon: 'BiaoGe',
+  name: 'BGLite 金团表格',
+  requiredAddon: 'BGLite',
   sourceFiles: [SOURCE_FILE],
   outputDir: 'Interface/AddOns/BiaoGeAccounts',
 
