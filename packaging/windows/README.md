@@ -4,15 +4,15 @@
 
 ## 构建
 
-在 Windows x64 和 PowerShell 7 上，先安装项目依赖，再运行：
+准备 [开发环境](../../README.md#从源码运行)，包括 Go、CMake 和 Git 子模块。然后在 Windows x64 上使用 PowerShell 7 运行：
 
 ```powershell
 pnpm pack:msix
 ```
 
-脚本会生成 Tauri 图标、构建 release 可执行文件，并使用 winapp 生成未签名 MSIX。输出位于 `artifacts/msix/1.0.0.0/`，可上传到 Partner Center；Microsoft Store 会为发布包签名。
+脚本会生成 Tauri 图标，构建应用和本地物品读取程序，再使用 winapp 将应用、辅助程序、CascLib DLL 和许可证一起打成未签名 MSIX。输出位于 `artifacts/msix/1.0.0.0/`，可上传到 Partner Center；Microsoft Store 会为发布包签名。
 
-重新使用已构建的可执行文件时：
+重新使用同一次 Release 构建产生的应用、辅助程序及资源时：
 
 ```powershell
 pnpm pack:msix -SkipBuild

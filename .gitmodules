@@ -1,0 +1,6 @@
+[submodule "tools/clientdata/casclib"]
+	path = tools/clientdata/casclib
+	url = https://github.com/ladislav-zezula/CascLib.git
+[submodule "tools/clientdata/definitions"]
+	path = tools/clientdata/definitions
+	url = https://github.com/wowdev/WoWDBDefs.git

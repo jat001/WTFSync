@@ -64,7 +64,7 @@ export function toAccountFailure(id: string, error: unknown): AccountFailure {
 export async function loadAccountSource(
   fs: FileSystem,
   gameDir: string,
-  profile: AddonProfile,
+  profile: Pick<AddonProfile, 'sourceFiles'>,
   id: string,
 ): Promise<AccountSource> {
   if (!isValidAccountName(id)) {
@@ -120,7 +120,7 @@ export interface RetryOptions {
 export async function loadAccountSourceWithRetry(
   fs: FileSystem,
   gameDir: string,
-  profile: AddonProfile,
+  profile: Pick<AddonProfile, 'sourceFiles'>,
   id: string,
   { retries = 3, delayMs = 2000, sleep: wait = sleep }: RetryOptions = {},
 ): Promise<AccountSource> {

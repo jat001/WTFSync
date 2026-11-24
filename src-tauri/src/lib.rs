@@ -1,3 +1,5 @@
+mod clientdata;
+
 use std::path::Path;
 
 use tauri::Manager;
@@ -100,6 +102,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
+            clientdata::inventory_catalog,
             open_directory,
             grant_fs_directories
         ])

@@ -1,6 +1,6 @@
 # WTFSync
 
-WTFSync（WTF 同步器）是一款 Windows 桌面工具，用于在同一台电脑的多个《魔兽世界》账号之间共享 BGLite 金团表格的角色数据。它读取所选账号的插件存档，生成游戏插件模块 `BiaoGeAccounts`，供 BGLite 夜月扩展包的角色总览读取。你也可以直接在桌面应用里查看角色和金团账单。
+WTFSync（WTF 同步器）是一款 Windows 桌面工具，用于在同一台电脑的多个《魔兽世界》账号之间共享 BGLite 金团表格的角色数据。它读取所选账号的插件存档，生成游戏插件模块 `BiaoGeAccounts`，供 BGLite 夜月扩展包的角色总览读取。你也可以在桌面应用中查看角色和金团账单，或打开「离线库存」浏览 Syndicator 保存的物品。
 
 ## 第一次同步
 
@@ -13,21 +13,32 @@ Windows x64 安装包面向 Windows 10 2004（内部版本 19041）及以上版�
 
 自动同步默认开启。应用启动时会同步已选账号，运行期间会在其插件存档发生变化后重新生成模块。每个游戏版本单独保存账号选择。要从模块中移除某个账号，取消勾选后点击「立即同步」即可。
 
+## 离线库存
+
+离线库存单独读取当前游戏版本各账号的 `SavedVariables/Syndicator.lua`。在游戏中启用 Syndicator，登录要查看的角色，访问个人银行和有权限的公会银行后退出游戏。在 WTFSync 中选择游戏目录，打开「离线库存」，选择来源账号、角色或公会即可浏览。应用会记住所选账号，以及每个账号上次选择的角色。页面上的时间是存档文件的修改时间。
+
+物品图标、基础装等和属性从所选客户端的简体中文安装数据读取，并应用同构建的本地热修。客户端尚未下载完整、只读或缺少对应定义时，页面仍显示 Syndicator 快照中的物品信息。
+
+应用运行期间会复用近期的库存快照和客户端物品资料。页面打开时会监听存档更新。新增账号后，或需要跳过缓存时，可以点击「重新读取」。
+
+公会银行以来源账号的 Syndicator 存档为准。同账号的角色访问同一个公会银行会更新同一份记录，分页权限以存档里记录的状态为准。页面时间表示整个存档的写盘时间。
+
 ## 角色、账单与本地文件
 
-| 功能 | 读取或写入的内容 |
-| --- | --- |
+| 功能     | 读取或写入的内容                                                                                                                                                                 |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 账号同步 | 从版本目录下的 `WTF/Account/<账号>/SavedVariables/BGLite.lua` 读取数据，将账号 Lua 文件、加载器和插件清单写入同一版本的 `Interface/AddOns/BiaoGeAccounts/`。普通同步只读原存档。 |
-| 角色总览 | 按账号筛选或搜索角色，查看金币、装备和副本进度。要删除插件中的角色记录，请先退出游戏。确认删除后，应用会在原存档旁创建备份，再修改该账号的 `BGLite.lua`。 |
-| 金团账单 | 查看当前表格、装备成交、收支和分金明细。应用检测到表格清空时，会把上次读到的账单归档；也可在账单明细中手动保存。快照和归档保存在本机应用数据目录的 `bill-history.json`。 |
+| 角色总览 | 按账号筛选或搜索角色，查看金币、装备和副本进度。要删除插件中的角色记录，请先退出游戏。确认删除后，应用会在原存档旁创建备份，再修改该账号的 `BGLite.lua`。                        |
+| 金团账单 | 查看当前表格、装备成交、收支和分金明细。应用检测到表格清空时，会把上次读到的账单归档；也可在账单明细中手动保存。快照和归档保存在本机应用数据目录的 `bill-history.json`。         |
 
 同步数据保留在本机，生成的 Lua 文件为明文。反馈问题时，请隐去真实账号和角色名称。详见[隐私政策](src/assets/privacy-policy.txt)。
 
 ## 从源码运行
 
-在 Windows 上准备 Node.js 26.x、pnpm 12.x、稳定版 Rust（MSVC 工具链）、Visual Studio C++ 生成工具、Windows SDK 和 WebView2。在仓库根目录执行以下命令。首次从源码启动桌面应用时，需要先从项目图标生成 Tauri 图标资源。
+在 Windows 上准备 Node.js 26.x、pnpm 12.x、稳定版 Rust（MSVC 工具链）、Go 1.27 或更新版本、带 CMake 的 Visual Studio C++ 生成工具、Windows SDK 和 WebView2。在仓库根目录执行以下命令。首次从源码启动桌面应用时，需要先从项目图标生成 Tauri 图标资源。
 
 ```powershell
+git submodule update --init
 pnpm install --frozen-lockfile
 pnpm exec tauri icon public/icon.png
 pnpm exec tauri dev
@@ -35,12 +46,12 @@ pnpm exec tauri dev
 
 单独运行 `pnpm dev` 可以在浏览器中开发界面。选择本地目录、读取游戏存档和验证自动同步时，请使用桌面应用。
 
-| 命令 | 用途 |
-| --- | --- |
-| `pnpm build` | 构建前端并检查 Vue 和 TypeScript 类型。首次构建会生成类型检查所需的声明。 |
-| `pnpm exec vp check --deny-warnings` | 检查格式和代码质量。 |
-| `pnpm test` | 运行 Vitest 测试。 |
-| `pnpm store:sample` | 在 `artifacts/store-sample/WorldOfWarcraft` 生成虚构的游戏目录，可用它走完首次同步流程。 |
-| `pnpm pack:msix` | 使用 PowerShell 7 构建 Windows x64 MSIX，默认生成未签名包。 |
+| 命令                                 | 用途                                                                                     |
+| ------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `pnpm build`                         | 构建前端并检查 Vue 和 TypeScript 类型。首次构建会生成类型检查所需的声明。                |
+| `pnpm exec vp check --deny-warnings` | 检查格式和代码质量。                                                                     |
+| `pnpm test`                          | 运行 Vitest 测试。                                                                       |
+| `pnpm store:sample`                  | 在 `artifacts/store-sample/WorldOfWarcraft` 生成虚构的游戏目录，可用它走完首次同步流程。 |
+| `pnpm pack:msix`                     | 使用 PowerShell 7 构建 Windows x64 MSIX，默认生成未签名包。                              |
 
 包版本、签名、产物路径和手动构建工作流见 [Windows 打包说明](packaging/windows/README.md)。项目采用 [The Unlicense](LICENSE)。

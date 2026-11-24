@@ -1,5 +1,4 @@
 import { isValidAccountName } from './accounts'
-import type { SyncTask } from './engine'
 import { isDirectory, type FileSystem } from './fs'
 import { basename } from './paths'
 import { savedVariablesDir } from './wow'
@@ -22,10 +21,16 @@ export interface SourceWatch {
  * Directories are watched rather than files, because the game may save by
  * replacing the file, which would silently end a watch on the file itself.
  */
-export async function watchSources(
+export async function watchSources<
+  T extends {
+    gameDir: string
+    accounts: readonly string[]
+    profile: { sourceFiles: readonly string[] }
+  },
+>(
   fs: FileSystem,
-  tasks: readonly SyncTask[],
-  onChange: (task: SyncTask) => void,
+  tasks: readonly T[],
+  onChange: (task: T, paths: readonly string[]) => void,
   delayMs = WATCH_DELAY_MS,
 ): Promise<SourceWatch> {
   const stops: (() => void)[] = []
@@ -53,9 +58,8 @@ export async function watchSources(
       const unwatch = await fs.watch(
         dirs,
         (paths) => {
-          if (paths.some((path) => names.has(basename(path).toLowerCase()))) {
-            onChange(task)
-          }
+          const changed = paths.filter((path) => names.has(basename(path).toLowerCase()))
+          if (changed.length) onChange(task, changed)
         },
         delayMs,
       )

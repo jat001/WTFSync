@@ -137,26 +137,4 @@ export const professionNames = new Map([
   ['engineering_jiade', '贾德的特制能量源'],
 ])
 
-export const equipmentSlots = [
-  '头部',
-  '颈部',
-  '肩部',
-  '衬衣',
-  '胸部',
-  '腰部',
-  '腿部',
-  '脚部',
-  '手腕',
-  '手部',
-  '戒指一',
-  '戒指二',
-  '饰品一',
-  '饰品二',
-  '背部',
-  '主手',
-  '副手',
-  '远程',
-  '战袍',
-]
-
 export const standings = ['仇恨', '敌对', '冷淡', '中立', '友善', '尊敬', '崇敬', '崇拜']

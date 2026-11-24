@@ -44,7 +44,12 @@ try {
     # Only the verified, version-specific package staging directory is disposable.
     if (Test-Path -LiteralPath $layoutDir) { Remove-Item -LiteralPath $layoutDir -Recurse -Force }
     [IO.Directory]::CreateDirectory($layoutDir) | Out-Null
-    Copy-Item -LiteralPath $executable -Destination (Join-Path $layoutDir 'wtfsync.exe')
+    $releaseDir = Split-Path -Parent $executable
+    foreach ($entry in @('wtfsync.exe', 'wtfsync-clientdata.exe', 'CascLib.dll', 'clientdata-licenses')) {
+        $source = Join-Path $releaseDir $entry
+        if (-not (Test-Path -LiteralPath $source)) { throw "Missing release component: $entry" }
+        Copy-Item -LiteralPath $source -Destination $layoutDir -Recurse
+    }
     Copy-Item -LiteralPath (Join-Path $projectRoot 'packaging/windows/Assets') -Destination $layoutDir -Recurse
 
     [xml]$manifest = Get-Content -LiteralPath $manifestPath -Raw

@@ -6,6 +6,11 @@ import { joinPath, pathKey } from '../core/paths'
 import { allowFsDirectories } from '../lib/fs'
 import { isTauri } from '../lib/tauri'
 
+const inventorySelectionSchema = z.object({
+  account: z.string(),
+  characters: z.record(z.string(), z.string()).catch({}),
+})
+
 /**
  * Settings schema: every key carries a `.catch(default)` so that any
  * missing/invalid value in the persisted store transparently falls back
@@ -24,6 +29,8 @@ export const settingsSchema = z.object({
   // Selected accounts keyed by the full game directory and profile ID.
   // A missing key lets the sync layer import a selection from existing output.
   selections: z.record(z.string(), z.array(z.string())).catch({}),
+  // Last inventory account per game directory and last character per account.
+  inventorySelections: z.record(z.string(), inventorySelectionSchema).catch({}),
 })
 
 export type Settings = z.infer<typeof settingsSchema>

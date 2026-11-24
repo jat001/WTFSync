@@ -8,6 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules/
+build/
 dist/
 dist-ssr/
 .vitest/
@@ -30,8 +31,6 @@ dist-ssr/
 # Auto-generated type declarations
 auto-imports.d.ts
 components.d.ts
-
-docs/
 
 # Store packaging outputs and local signing material
 artifacts/

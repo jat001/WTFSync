@@ -5,6 +5,7 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 // @ts-expect-error type error without @types/node package
 import process from 'node:process'
 const host = process.env.TAURI_DEV_HOST
+const clientDataSources = ['tools/clientdata/casclib/**', 'tools/clientdata/definitions/**']
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -38,10 +39,12 @@ export default defineConfig({
     include: ['tests/**/*.test.ts'],
   },
   fmt: {
+    ignorePatterns: clientDataSources,
     semi: false,
     singleQuote: true,
   },
   lint: {
+    ignorePatterns: clientDataSources,
     options: {
       typeAware: true,
       typeCheck: true,

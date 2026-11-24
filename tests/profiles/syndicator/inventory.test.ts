@@ -1,0 +1,129 @@
+import { describe, expect, it, vi } from 'vitest'
+import { parseSavedVariables } from '../../../src/core/lua/parser'
+import { readInventory } from '../../../src/profiles/syndicator/inventory'
+import { createInventoryLoader } from '../../../src/profiles/syndicator/load'
+import { MemoryFileSystem } from '../../helpers/memory-fs'
+
+const ring =
+  '{itemID=30,itemLink="|cffa335ee|Hitem:30:14:15:::::77|h[月石指环]|h|r",itemCount=1,quality=4,isBound=false}'
+function snapshot(character: string) {
+  return `SYNDICATOR_DATA={Characters={["${character}"]={
+    details={character="${character}",realm="示例服"},
+    equipped={[12]=${ring},[13]={}},
+    bags={{ {}, ${ring}, {} },[6]={{itemID=50,itemCount=3}}},
+    bank={{ {}, {}, ${ring} }}
+  }},Guilds={["测试公会"]={details={visited=true},bank={
+    {name="材料",isViewable=true,slots={{},${ring},{}}},
+    {name="官员",isViewable=false,slots={${ring}}}
+  }}}}`
+}
+describe('Syndicator inventory', () => {
+  it('preserves source offsets, empty positions, quantities and instance fields', () => {
+    const root = parseSavedVariables(snapshot('样本')).globals.get('SYNDICATOR_DATA')
+    const {
+      characters: [c],
+      guilds: [g],
+    } = readInventory(root, '_classic_titan_')
+    expect(c.label).toBe('样本 · 示例服')
+    expect(c.equipped[0].slots.find((slot) => slot.index === 11)).toMatchObject({
+      label: '戒指一',
+      item: { name: '月石指环', enchant: 14, gems: [15], bound: false },
+    })
+    expect(c.equipped[0].slots[11]).toMatchObject({ recorded: true, item: undefined })
+    expect(c.bags[0].slots.map((x) => x.item?.id)).toEqual([undefined, 30, undefined])
+    expect(c.bags[1]).toMatchObject({
+      name: '钥匙环',
+      slots: [{ item: { count: 3, name: '物品 #50' } }],
+    })
+    expect(c.bank[0].slots[2].item?.id).toBe(30)
+    expect(g.tabs[0].slots[1].item?.bound).toBe(false)
+    expect(g.tabs[1]).toMatchObject({ restricted: true, slots: [] })
+  })
+
+  it('reads tabbed personal banks independently of guild and warband banks', () => {
+    const root = parseSavedVariables(
+      `SYNDICATOR_DATA={Characters={A={bank={},bankTabs={{name="银行分页",slots={{},${ring}}}}}},Warband={{bank={}}}}`,
+    ).globals.get('SYNDICATOR_DATA')
+    const {
+      characters: [c],
+      guilds,
+    } = readInventory(root, '_retail_')
+    expect(c.bank).toHaveLength(1)
+    expect(c.bank[0]).toMatchObject({
+      name: '银行分页',
+      slots: [{ item: undefined }, { item: { id: 30 } }],
+    })
+    expect(c.equipped).toHaveLength(0)
+    expect(guilds).toHaveLength(0)
+  })
+
+  it('reads only Syndicator across independent accounts and isolates malformed files', async () => {
+    const fs = new MemoryFileSystem()
+    const dir = '/wow/_classic_titan_'
+    const path = (id: string, name: string) => `${dir}/WTF/Account/${id}/SavedVariables/${name}.lua`
+    for (const account of ['A', 'B']) fs.setFile(path(account, 'Syndicator'), snapshot('同名'))
+    fs.setFile(path('Other', 'BGLite'), snapshot('其他插件'))
+    fs.setFile(path('Broken', 'Syndicator'), 'SYNDICATOR_DATA=false')
+    const { accounts, failures } = await createInventoryLoader(fs).load(dir, [
+      'A',
+      'Other',
+      'Broken',
+      'B',
+    ])
+    expect(accounts.map((a) => a.account)).toEqual(['A', 'B'])
+    expect(failures).toMatchObject([{ id: 'Broken', reason: 'invalid-data' }])
+    expect(fs.log).toEqual([])
+  })
+
+  it('reuses unchanged accounts and reloads changed, invalidated and replaced saves', async () => {
+    const fs = new MemoryFileSystem()
+    const readFile = vi.spyOn(fs, 'readFile')
+    const dir = '/wow/_classic_titan_'
+    const a = `${dir}/WTF/Account/A/SavedVariables/Syndicator.lua`
+    const b = `${dir}/WTF/Account/B/SavedVariables/Syndicator.lua`
+    fs.setFile(a, snapshot('旧角色'))
+    fs.setFile(b, snapshot('第二账号'))
+    const loader = createInventoryLoader(fs)
+    const load = () => loader.load(dir, ['A', 'B'])
+
+    const initial = await load()
+    const cached = (await load()).accounts[0]
+    expect(cached.characters[0]).toBe(initial.accounts[0].characters[0])
+    expect(cached.guilds[0]).toBe(initial.accounts[0].guilds[0])
+    expect(readFile.mock.calls).toEqual([[a], [b]])
+
+    fs.setFile(a, snapshot('新角色'))
+    expect((await load()).accounts[0].characters[0].key).toBe('新角色')
+    expect(readFile.mock.calls).toEqual([[a], [b], [a]])
+
+    loader.invalidate([b])
+    await load()
+    expect(readFile.mock.calls).toEqual([[a], [b], [a], [b]])
+
+    loader.invalidateAccounts(dir, ['A', 'B'])
+    await load()
+    expect(readFile.mock.calls.slice(-2)).toEqual([[a], [b]])
+
+    await fs.remove(a)
+    expect((await load()).accounts.map(({ account }) => account)).toEqual(['B'])
+    fs.setFile(a, snapshot('替换角色'))
+    expect((await load()).accounts[0].characters[0].key).toBe('替换角色')
+  })
+
+  it('keeps same-name characters on different realms in separate cached records', async () => {
+    const fs = new MemoryFileSystem()
+    const dir = '/wow/_classic_titan_'
+    const path = `${dir}/WTF/Account/A/SavedVariables/Syndicator.lua`
+    fs.setFile(
+      path,
+      'SYNDICATOR_DATA={Characters={Alpha={details={character="同名",realm="一服"},equipped={[12]={itemID=30}}},Beta={details={character="同名",realm="二服"},equipped={[12]={itemID=31}}}}}',
+    )
+    const loader = createInventoryLoader(fs)
+    const initial = (await loader.load(dir, ['A'])).accounts[0].characters
+    const cached = (await loader.load(dir, ['A'])).accounts[0].characters
+    expect(cached[0]).toBe(initial[0])
+    expect(cached[1]).toBe(initial[1])
+    expect(cached.find((c) => c.realm === '一服')?.equipped[0].slots[10].item?.id).toBe(30)
+    expect(cached.find((c) => c.realm === '二服')?.equipped[0].slots[10].item?.id).toBe(31)
+  })
+})

@@ -1,0 +1,14 @@
+{
+  "bundle": {
+    "externalBin": ["binaries/wtfsync-clientdata"],
+    "resources": {
+      "binaries/CascLib.dll": "CascLib.dll",
+      "../tools/clientdata/THIRD-PARTY.md": "clientdata-licenses/THIRD-PARTY.md",
+      "../tools/clientdata/casclib/LICENSE": "clientdata-licenses/CascLib.txt",
+      "../tools/clientdata/definitions/LICENSE.md": "clientdata-licenses/WoWDBDefs.md",
+      "../tools/clientdata/WoWSims-NOTICES.md": "clientdata-licenses/WoWSims-NOTICES.md",
+      "../tools/clientdata/WoWSims-LICENSE.txt": "clientdata-licenses/WoWSims-LICENSE.txt",
+      "../tools/clientdata/warcraft-rs-MIT.txt": "clientdata-licenses/warcraft-rs-MIT.txt"
+    }
+  }
+}

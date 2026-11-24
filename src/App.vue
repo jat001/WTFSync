@@ -16,12 +16,14 @@ import About from './pages/About.vue'
 import BiaoGeBills from './pages/BiaoGeBills.vue'
 import BiaoGeOverview from './pages/BiaoGeOverview.vue'
 import Home from './pages/Home.vue'
+import Inventory from './pages/Inventory.vue'
 import Setting from './pages/Setting.vue'
 
-type PageKey = 'home' | 'biaoge-overview' | 'biaoge-bills' | 'setting' | 'about'
+type PageKey = 'home' | 'biaoge-overview' | 'biaoge-bills' | 'inventory' | 'setting' | 'about'
 
 const pages: Record<PageKey, Component> = {
   home: Home,
+  inventory: Inventory,
   'biaoge-overview': BiaoGeOverview,
   'biaoge-bills': BiaoGeBills,
   setting: Setting,
@@ -132,6 +134,7 @@ const navItems = [
     icon: 'i-lucide-layout-dashboard',
   },
   { key: 'biaoge-overview' as PageKey, label: '角色总览', icon: 'i-lucide-contact-round' },
+  { key: 'inventory' as PageKey, label: '离线库存', icon: 'i-lucide-backpack' },
   { key: 'biaoge-bills' as PageKey, label: '金团账单', icon: 'i-lucide-receipt-text' },
   { key: 'setting' as PageKey, label: '设置', icon: 'i-lucide-settings-2' },
   { key: 'about' as PageKey, label: '关于', icon: 'i-lucide-circle-help' },

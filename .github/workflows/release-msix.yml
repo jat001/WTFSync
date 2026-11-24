@@ -17,6 +17,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          submodules: true
       - uses: pnpm/action-setup@v6
         with:
           version: 12.22.0
@@ -24,6 +26,10 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 26
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: tools/clientdata/go.mod
+          cache-dependency-path: tools/clientdata/go.sum
       - uses: dtolnay/rust-toolchain@stable
       - run: pnpm install --frozen-lockfile
       - run: pnpm build

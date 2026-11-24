@@ -8,11 +8,11 @@ import {
   type LuaNode,
   type LuaTable,
 } from '../../core/lua/ast'
+import { equipmentSlots } from '../../lib/equipment-slots'
 import type { Character } from '../../core/profile'
 import {
   currencyNames,
   difficultyNames,
-  equipmentSlots,
   professionNames,
   raidNames,
   standings,

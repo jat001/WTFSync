@@ -26,8 +26,8 @@ describe('watchSources', () => {
     fs.setFile(`${dir('2#1')}\\Echo.lua`, '')
 
     const task: SyncTask = { gameDir: GAME, profile, accounts: ['1#1', '3#1'] }
-    const changed: SyncTask[] = []
-    const watch = await watchSources(fs, [task], (t) => changed.push(t))
+    const changed: { task: SyncTask; paths: readonly string[] }[] = []
+    const watch = await watchSources(fs, [task], (t, paths) => changed.push({ task: t, paths }))
     expect(watch.watchedDirs).toEqual([dir('1#1')])
     expect(watch.missingDirs).toEqual([dir('3#1')])
 
@@ -35,8 +35,9 @@ describe('watchSources', () => {
     fs.touch(`${dir('2#1')}\\Echo.lua`)
     expect(changed).toEqual([])
 
-    fs.touch(`${dir('1#1')}\\echo.lua`)
-    expect(changed).toEqual([task])
+    const file = `${dir('1#1')}\\echo.lua`
+    fs.touch(file, `${dir('1#1')}\\Other.lua`)
+    expect(changed).toEqual([{ task, paths: [file] }])
 
     watch.stop()
     expect(fs.watcherCount).toBe(0)
