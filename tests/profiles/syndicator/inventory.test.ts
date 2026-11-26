@@ -44,6 +44,22 @@ describe('Syndicator inventory', () => {
     expect(g.tabs[1]).toMatchObject({ restricted: true, slots: [] })
   })
 
+  it('omits inline icons from item names while preserving original hyperlinks', () => {
+    const potion =
+      '|cnIQ1:|Hitem:212241::::::::80:253::::1:38:3:::::|h[阿加法力药水 |A:Professions-ChatIcon-Quality-Tier3:17:15::1|a]|h|r'
+    const reagent = '|cffffffff|Hitem:31|h[|T12345:0|t 贡品]|h|r'
+    const root = parseSavedVariables(
+      `SYNDICATOR_DATA={Characters={A={bags={{{itemLink="${potion}"},{itemLink="${reagent}"}}}}}}`,
+    ).globals.get('SYNDICATOR_DATA')
+    const {
+      characters: [character],
+    } = readInventory(root, '_retail_')
+    expect(character.bags[0].slots.map(({ item }) => item)).toMatchObject([
+      { id: 212241, name: '阿加法力药水', link: potion },
+      { id: 31, name: '贡品', link: reagent },
+    ])
+  })
+
   it('reads tabbed personal banks independently of guild and warband banks', () => {
     const root = parseSavedVariables(
       `SYNDICATOR_DATA={Characters={A={bank={},bankTabs={{name="银行分页",slots={{},${ring}}}}}},Warband={{money=201,bank={[2]={name="战团材料",slots={[2]=${ring},[3]={}}}}}}}`,

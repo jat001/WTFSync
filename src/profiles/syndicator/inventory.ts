@@ -100,7 +100,7 @@ function readItem(node: LuaNode | undefined): InventoryItem | undefined {
   while (gemSlots.length && !gemSlots[gemSlots.length - 1]) gemSlots.pop()
   return {
     id,
-    name: name || (id ? `物品 #${id}` : '未知物品'),
+    name: name?.replace(/\|A[^|]+\|a|\|T[^|]+\|t/g, '').trim() || (id ? `物品 #${id}` : '未知物品'),
     count: asNumber(valueOf(node, 'itemCount')),
     quality: asNumber(valueOf(node, 'quality')),
     bound: flag(node, 'isBound'),
