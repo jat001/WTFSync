@@ -140,6 +140,7 @@ async function saveSelectedBill() {
           :items="flavorItems"
           aria-label="游戏版本"
           size="sm"
+          class="game-version-select"
         />
         <UButton
           label="重新读取"

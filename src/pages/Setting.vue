@@ -176,7 +176,7 @@ function onReset() {
             placeholder="请先选择目录"
             :disabled="flavorItems.length === 0"
             size="sm"
-            class="w-64"
+            class="game-version-select"
           />
         </div>
       </div>

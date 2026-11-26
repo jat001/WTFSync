@@ -130,7 +130,7 @@ function inspect(box: Container, slot: InventorySlot) {
           :items="flavorItems"
           aria-label="游戏版本"
           size="sm"
-          class="w-32"
+          class="game-version-select"
         />
         <UButton
           label="重新读取"

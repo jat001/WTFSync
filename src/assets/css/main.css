@@ -1,6 +1,10 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
 
+@utility game-version-select {
+  @apply w-56 shrink-0;
+}
+
 :root {
   font-family: 'Segoe UI', 'Microsoft YaHei UI', sans-serif;
   font-synthesis: none;

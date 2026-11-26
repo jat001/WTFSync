@@ -192,7 +192,7 @@ async function openOutputDir() {
           :items="flavorItems"
           value-key="value"
           size="sm"
-          class="w-40"
+          class="game-version-select"
           aria-label="游戏版本"
         />
         <UButton
