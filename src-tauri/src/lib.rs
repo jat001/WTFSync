@@ -1,3 +1,5 @@
+#[cfg(windows)]
+mod catalog_cache;
 mod clientdata;
 
 use std::path::Path;
@@ -103,6 +105,8 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             clientdata::inventory_catalog,
+            #[cfg(windows)]
+            catalog_cache::inventory_cache,
             open_directory,
             grant_fs_directories
         ])

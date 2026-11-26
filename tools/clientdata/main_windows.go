@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	"embed"
 	"encoding/binary"
 	"encoding/json"
@@ -100,32 +101,37 @@ func idsFrom(records rows, column string) idSet {
 	return ids
 }
 
-func (d *dataset) scan(name string, visit func(int32, func(string) any)) error {
+type tableRows struct {
+	entries []wdc.Row
+	columns map[string]int
+}
+
+func (d *dataset) table(name string) (tableRows, error) {
 	file := d.files[name]
 	raw, err := d.storage.read(file.FileDataID, 96<<20, fillEncrypted)
 	if err != nil {
-		return err
+		return tableRows{}, err
 	}
 	// The unmodified WDC reader takes a file path.
 	tmp, err := os.CreateTemp("", "wtfsync-db2-*")
 	if err != nil {
-		return err
+		return tableRows{}, err
 	}
 	defer os.Remove(tmp.Name())
 	_, writeErr := tmp.Write(raw)
 	closeErr := tmp.Close()
 	if writeErr != nil {
-		return writeErr
+		return tableRows{}, writeErr
 	}
 	if closeErr != nil {
-		return closeErr
+		return tableRows{}, closeErr
 	}
 	table, err := wdc.ReadFile(tmp.Name())
 	if err != nil {
-		return err
+		return tableRows{}, err
 	}
 	if fmt.Sprintf("%08X", table.TableHash) != file.Hash {
-		return fmt.Errorf("%s: unexpected DB2 table hash %08X", name, table.TableHash)
+		return tableRows{}, fmt.Errorf("%s: unexpected DB2 table hash %08X", name, table.TableHash)
 	}
 	// WDC5 stores the layout hash after its 136-byte prefix and five header fields.
 	// ReadFile above validates the signature and full header before this access.
@@ -133,15 +139,15 @@ func (d *dataset) scan(name string, visit func(int32, func(string) any)) error {
 	hash := fmt.Sprintf("%08X", binary.LittleEndian.Uint32(raw[layoutHashOffset:]))
 	schema, err := d.schemas.resolve(name, hash, d.build)
 	if err != nil {
-		return err
+		return tableRows{}, err
 	}
 	decoded, err := table.DecodeRows(schema.definition, schema.layout, d.build)
 	if err != nil {
-		return err
+		return tableRows{}, err
 	}
 	if d.hotfix != nil {
 		if _, _, err := d.hotfix.ApplyHotfixes(table, schema.definition, schema.layout, d.build, decoded); err != nil {
-			return err
+			return tableRows{}, err
 		}
 	}
 	if schema.downloaded != nil {
@@ -151,40 +157,68 @@ func (d *dataset) scan(name string, visit func(int32, func(string) any)) error {
 	for index, col := range schema.layout.Definitions {
 		columns[col.Name] = index
 	}
-	for _, entry := range decoded.Rows {
-		visit(entry.ID, func(column string) any {
-			if index, found := columns[column]; found {
-				return entry.Values[index]
+	return tableRows{decoded.Rows, columns}, nil
+}
+
+func (t tableRows) field(entry wdc.Row, column string) any {
+	if index, found := t.columns[column]; found {
+		return entry.Values[index]
+	}
+	return nil
+}
+
+func (t tableRows) selectRows(ids idSet, key, fields string) rows {
+	out := rows{}
+	columns := strings.Fields(fields)
+	project := func(entry wdc.Row) {
+		record := row{}
+		for _, column := range columns {
+			if v := t.field(entry, column); v != nil {
+				record[column] = v
 			}
-			return nil
-		})
+		}
+		out[entry.ID] = record
+	}
+	if ids != nil && key == "" {
+		for id := range ids {
+			if index, ok := slices.BinarySearchFunc(t.entries, id, func(entry wdc.Row, id int32) int {
+				return cmp.Compare(entry.ID, id)
+			}); ok {
+				project(t.entries[index])
+			}
+		}
+		return out
+	}
+	for _, entry := range t.entries {
+		id := entry.ID
+		lookup := id
+		if key != "" {
+			lookup = integer(t.field(entry, key))
+		}
+		if ids == nil || ids[lookup] {
+			project(entry)
+		}
+	}
+	return out
+}
+
+func (d *dataset) scan(name string, visit func(int32, func(string) any)) error {
+	table, err := d.table(name)
+	if err != nil {
+		return err
+	}
+	for _, entry := range table.entries {
+		visit(entry.ID, func(column string) any { return table.field(entry, column) })
 	}
 	return nil
 }
 
 func (d *dataset) selectRows(name string, ids idSet, key, fields string) (rows, error) {
-	out := rows{}
 	if ids != nil && len(ids) == 0 {
-		return out, nil
+		return rows{}, nil
 	}
-	columns := strings.Fields(fields)
-	err := d.scan(name, func(id int32, field func(string) any) {
-		lookup := id
-		if key != "" {
-			lookup = integer(field(key))
-		}
-		if ids != nil && !ids[lookup] {
-			return
-		}
-		record := row{}
-		for _, column := range columns {
-			if v := field(column); v != nil {
-				record[column] = v
-			}
-		}
-		out[id] = record
-	})
-	return out, err
+	table, err := d.table(name)
+	return table.selectRows(ids, key, fields), err
 }
 
 func (d *dataset) optional(name string, ids idSet, key, fields string) rows {
@@ -200,29 +234,26 @@ var spellReference = regexp.MustCompile(`\$(?:@spell(?:name|desc|tooltip))?(\d+)
 
 // The enchantment table's localized Name is the stat line on the item.
 // Application spells carry the original name and full localized description.
-func (d *dataset) enchantSpells(enchants idSet) map[int32][]int32 {
+func enchantSpells(table tableRows, enchants idSet) map[int32][]int32 {
 	candidates := map[int32][]int32{}
 	if len(enchants) == 0 {
 		return candidates
 	}
-	err := d.scan("SpellEffect", func(_ int32, field func(string) any) {
+	for _, entry := range table.entries {
 		const enchantItem = 53
 		const enchantPrismatic = 156
-		effect := integer(field("Effect"))
-		if integer(field("DifficultyID")) != 0 || (effect != enchantItem && effect != enchantPrismatic) {
-			return
+		effect := integer(table.field(entry, "Effect"))
+		if integer(table.field(entry, "DifficultyID")) != 0 || (effect != enchantItem && effect != enchantPrismatic) {
+			continue
 		}
-		misc, _ := field("EffectMiscValue").([]int64)
+		misc, _ := table.field(entry, "EffectMiscValue").([]int64)
 		if len(misc) == 0 || !enchants[int32(misc[0])] {
-			return
+			continue
 		}
 		id := int32(misc[0])
-		if spell := integer(field("SpellID")); spell > 0 && !slices.Contains(candidates[id], spell) {
+		if spell := integer(table.field(entry, "SpellID")); spell > 0 && !slices.Contains(candidates[id], spell) {
 			candidates[id] = append(candidates[id], spell)
 		}
-	})
-	if err != nil {
-		d.decoded.Incomplete = true
 	}
 	return candidates
 }
@@ -320,7 +351,7 @@ func (d *dataset) loadSocketArt(known []int32) {
 	}
 }
 
-func (d *dataset) load(req request) error {
+func (d *dataset) load(req request, preview func(result) error) error {
 	if len(req.Items) == 0 && len(req.Enchants) == 0 {
 		d.loadImages(idSet{}, req)
 		return nil
@@ -341,21 +372,41 @@ func (d *dataset) load(req request) error {
 	if d.product == "wowf" {
 		fields += " StatPercentEditor DmgVariance Flags"
 	}
-	sparse, err := d.selectRows("ItemSparse", itemIDs, "", fields)
-	if err != nil {
-		return fmt.Errorf("ItemSparse: %w", err)
+	var sparseTable tableRows
+	if len(itemIDs) > 0 {
+		var err error
+		sparseTable, err = d.table("ItemSparse")
+		if err != nil {
+			return fmt.Errorf("ItemSparse: %w", err)
+		}
 	}
+	sparse := sparseTable.selectRows(itemIDs, "", fields)
 	d.decoded.Tables["ItemSparse"] = sparse
 	item := d.optional("Item", itemIDs, "", "ClassID SubclassID IconFileDataID MaxDurability Resistances MinDamage MaxDamage")
 	d.fillAppearanceIcons(item)
+	if len(idsFrom(sparse, "Gem_properties")) > 0 || len(idsFrom(sparse, "SocketType")) > 0 {
+		req.SocketArt = true
+	}
+	d.loadImages(idsFrom(item, "IconFileDataID"), req)
+	if preview != nil {
+		first := d.decoded
+		first.Tables = map[string]rows{
+			"Item":       item,
+			"ItemSparse": sparseTable.selectRows(itemIDs, "", "ItemLevel Gem_properties SocketType"),
+		}
+		if err := preview(first); err != nil {
+			return err
+		}
+		d.decoded.Icons = map[int32][]byte{}
+		d.decoded.SocketAtlases = nil
+		d.decoded.SocketRegions = nil
+	}
 	if d.product == "wowf" {
 		d.fillForeverItemStats(sparse, item)
 	}
 	setIDs := idsFrom(sparse, "ItemSet")
 	sets := d.optional("ItemSet", setIDs, "", "Name_lang ItemID")
-	pieces := d.optional("ItemSparse", idsFrom(sets, "ItemID"), "", "Display_lang InventoryType")
-	d.decoded.Tables["Pieces"] = pieces
-	d.decoded.Tables["ItemSparse"] = sparse
+	d.decoded.Tables["Pieces"] = sparseTable.selectRows(idsFrom(sets, "ItemID"), "", "Display_lang InventoryType")
 	bonuses := d.optional("ItemSetSpell", setIDs, "ItemSetID", "ItemSetID Threshold SpellID ChrSpecID")
 	gems := d.optional("GemProperties", idsFrom(sparse, "Gem_properties"), "", "Enchant_ID Type")
 	for id := range idsFrom(gems, "Enchant_ID") {
@@ -367,21 +418,39 @@ func (d *dataset) load(req request) error {
 	enchant := d.optional("SpellItemEnchantment", enchants, "", "Name_lang Condition_ID EffectPointsMin EffectScalingPoints")
 	d.optional("SpellItemEnchantmentCondition", idsFrom(enchant, "Condition_ID"), "", "Lt_operandType Operator Rt_operandType Rt_operand Logic")
 	d.optional("ItemSubClass", nil, "", "ClassID SubClassID DisplayName_lang")
-	effects := d.optional("ItemEffect", itemIDs, "ParentItemID", "ParentItemID SpellID TriggerType CoolDownMSec")
+	effects := rows{}
+	var effectTable tableRows
+	if len(itemIDs) > 0 {
+		var err error
+		effectTable, err = d.table("ItemEffect")
+		if err != nil {
+			d.decoded.Incomplete = true
+		}
+		effects = effectTable.selectRows(itemIDs, "ParentItemID", "ParentItemID SpellID TriggerType CoolDownMSec")
+	}
+	d.decoded.Tables["ItemEffect"] = effects
 	// The relationship moved into a separate table on some clients.
 	links, linkErr := d.selectRows("ItemXItemEffect", itemIDs, "ItemID", "ItemID ItemEffectID")
 	if linkErr == nil && len(links) > 0 {
-		entries, effectErr := d.selectRows("ItemEffect", idsFrom(links, "ItemEffectID"), "", "SpellID TriggerType CoolDownMSec")
-		if effectErr != nil {
-			d.decoded.Incomplete = true
-		}
+		entries := effectTable.selectRows(idsFrom(links, "ItemEffectID"), "", "SpellID TriggerType CoolDownMSec")
 		for id, link := range links {
 			if r := entries[integer(link["ItemEffectID"])]; r != nil {
 				effects[-id] = row{"ParentItemID": link["ItemID"], "SpellID": r["SpellID"], "TriggerType": r["TriggerType"], "CoolDownMSec": r["CoolDownMSec"]}
 			}
 		}
 	}
-	candidates := d.enchantSpells(appliedEnchants)
+	var spellEffectTable tableRows
+	loadSpellEffects := func() {
+		var err error
+		spellEffectTable, err = d.table("SpellEffect")
+		if err != nil {
+			d.decoded.Incomplete = true
+		}
+	}
+	if len(appliedEnchants) > 0 {
+		loadSpellEffects()
+	}
+	candidates := enchantSpells(spellEffectTable, appliedEnchants)
 	enchantSpellIDs := idSet{}
 	for _, ids := range candidates {
 		for _, id := range ids {
@@ -397,26 +466,27 @@ func (d *dataset) load(req request) error {
 		spellIDs[id] = true
 	}
 	if len(spellIDs) > 0 {
-		spells, err := d.selectRows("Spell", nil, "", "Description_lang")
+		spells, err := d.table("Spell")
 		if err != nil {
 			d.decoded.Incomplete = true
 		}
-		d.linkEnchantSpells(candidates, names, spells)
+		d.linkEnchantSpells(candidates, names, spells.selectRows(enchantSpellIDs, "", "Description_lang"))
 		selected := rows{}
 		dependencies := idSet{}
 		pending := spellIDs
 		for len(pending) > 0 {
 			next := idSet{}
+			batch := spells.selectRows(pending, "", "Description_lang")
 			for id := range pending {
 				if dependencies[id] {
 					continue
 				}
 				dependencies[id] = true
-				if spells[id] == nil {
+				if batch[id] == nil {
 					continue
 				}
-				selected[id] = spells[id]
-				desc, _ := spells[id]["Description_lang"].(string)
+				selected[id] = batch[id]
+				desc, _ := batch[id]["Description_lang"].(string)
 				for _, match := range spellReference.FindAllStringSubmatch(desc, -1) {
 					target, _ := strconv.ParseInt(match[1], 10, 32)
 					if target > 0 && !dependencies[int32(target)] {
@@ -427,14 +497,13 @@ func (d *dataset) load(req request) error {
 			pending = next
 		}
 		d.decoded.Tables["Spell"] = selected
-		d.optional("SpellEffect", dependencies, "SpellID", "SpellID DifficultyID EffectIndex EffectBasePoints EffectBasePointsF EffectDieSides EffectAura EffectAuraPeriod EffectRadiusIndex")
+		if len(appliedEnchants) == 0 {
+			loadSpellEffects()
+		}
+		d.decoded.Tables["SpellEffect"] = spellEffectTable.selectRows(dependencies, "SpellID", "SpellID DifficultyID EffectIndex EffectBasePoints EffectBasePointsF EffectDieSides EffectAura EffectAuraPeriod EffectRadiusIndex")
 		misc := d.optional("SpellMisc", dependencies, "SpellID", "SpellID DifficultyID DurationIndex")
 		d.optional("SpellDuration", idsFrom(misc, "DurationIndex"), "", "Duration")
 	}
-	if len(gems) > 0 || len(idsFrom(sparse, "SocketType")) > 0 {
-		req.SocketArt = true
-	}
-	d.loadImages(idsFrom(item, "IconFileDataID"), req)
 	return nil
 }
 
@@ -478,67 +547,50 @@ func (d *dataset) loadImages(ids idSet, req request) {
 	}
 }
 
-func run() error {
-	if len(os.Args) < 3 || len(os.Args) > 4 {
-		return fmt.Errorf("expected game directory, CascLib path, and optional definition cache path")
-	}
-	schemas := schemaStore{}
-	if len(os.Args) == 4 {
-		schemas.cacheDir = os.Args[3]
-		if !filepath.IsAbs(schemas.cacheDir) {
-			return fmt.Errorf("definition cache path must be absolute")
-		}
-	}
-	var req request
-	if err := json.NewDecoder(io.LimitReader(os.Stdin, 1<<20)).Decode(&req); err != nil {
-		return err
-	}
-	dir := os.Args[1]
+func openDataset(dir, dll, cacheDir string) (*dataset, error) {
 	flavor, err := os.ReadFile(filepath.Join(dir, ".flavor.info"))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	fields := strings.Fields(string(flavor))
 	if len(fields) == 0 {
-		return fmt.Errorf("missing product")
+		return nil, fmt.Errorf("missing product")
 	}
 	product := fields[len(fields)-1]
 	validProduct := regexp.MustCompile(`^wow[a-z0-9_]*$`)
 	if !validProduct.MatchString(product) {
-		return fmt.Errorf("invalid product")
+		return nil, fmt.Errorf("invalid product")
 	}
 	root := filepath.Dir(dir)
 	entries, err := tact.ParseBuildInfo(filepath.Join(root, ".build.info"))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	entry, err := tact.SelectBuild(entries, product)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	build, err := tact.BuildNumber(entry.Version)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	storage, err := openCasc(os.Args[2], root, product)
-	if err != nil {
-		return err
-	}
-	defer storage.close()
 	var manifest []tableFile
 	raw, err := definitions.ReadFile("definitions/manifest.json")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if err := json.Unmarshal(raw, &manifest); err != nil {
-		return err
+		return nil, err
 	}
 	files := map[string]tableFile{}
 	for _, record := range manifest {
 		files[record.Name] = record
 	}
-	d := dataset{storage: storage, product: product, build: build, files: files, schemas: schemas, decoded: result{Tables: map[string]rows{}, Icons: map[int32][]byte{}}}
-	defer d.schemas.close()
+	storage, err := openCasc(dll, root, product)
+	if err != nil {
+		return nil, err
+	}
+	d := &dataset{storage: storage, product: product, build: build, files: files, schemas: schemaStore{cacheDir: cacheDir}}
 	for _, entry := range entries {
 		if entry.Product != product && validProduct.MatchString(entry.Product) && !slices.Contains(d.fallbackProducts, entry.Product) {
 			d.fallbackProducts = append(d.fallbackProducts, entry.Product)
@@ -547,17 +599,86 @@ func run() error {
 	hotfix, err := wdc.ReadHotfixFile(filepath.Join(dir, "Cache", "ADB", "zhCN", "DBCache.bin"))
 	if err == nil && uint32(hotfix.BuildID) == build {
 		d.hotfix = hotfix
-	} else {
-		d.decoded.Incomplete = true
 	}
-	if err := d.load(req); err != nil {
+	return d, nil
+}
+
+func (d *dataset) query(req request, preview func(result) error) (result, error) {
+	d.decoded = result{Tables: map[string]rows{}, Icons: map[int32][]byte{}, Incomplete: d.hotfix == nil}
+	defer func() {
+		d.decoded = result{}
+		d.schemas.close()
+		d.schemas = schemaStore{cacheDir: d.schemas.cacheDir}
+	}()
+	err := d.load(req, preview)
+	return d.decoded, err
+}
+
+type message struct {
+	Stage string  `json:"stage"`
+	Data  *result `json:"data,omitempty"`
+	Error string  `json:"error,omitempty"`
+}
+
+func run(args []string) error {
+	session := len(args) > 0 && args[0] == "--session"
+	if session {
+		args = args[1:]
+	}
+	if len(args) < 2 || len(args) > 3 {
+		return fmt.Errorf("expected game directory, CascLib path, and optional definition cache path")
+	}
+	cacheDir := ""
+	if len(args) == 3 {
+		cacheDir = args[2]
+		if !filepath.IsAbs(cacheDir) {
+			return fmt.Errorf("definition cache path must be absolute")
+		}
+	}
+	out := json.NewEncoder(os.Stdout)
+	d, err := openDataset(args[0], args[1], cacheDir)
+	if err != nil {
 		return err
 	}
-	return json.NewEncoder(os.Stdout).Encode(d.decoded)
+	defer d.storage.close()
+	if !session {
+		var req request
+		if err := json.NewDecoder(io.LimitReader(os.Stdin, 1<<20)).Decode(&req); err != nil {
+			return err
+		}
+		data, err := d.query(req, nil)
+		if err != nil {
+			return err
+		}
+		return out.Encode(data)
+	}
+	in := json.NewDecoder(os.Stdin)
+	for {
+		var req request
+		if err := in.Decode(&req); err != nil {
+			if err == io.EOF {
+				return nil
+			}
+			return err
+		}
+		data, err := d.query(req, func(first result) error {
+			return out.Encode(message{Stage: "preview", Data: &first})
+		})
+		reply := message{Stage: "complete", Data: &data}
+		if err != nil {
+			reply = message{Stage: "error", Error: err.Error()}
+		}
+		if err := out.Encode(reply); err != nil {
+			return err
+		}
+	}
 }
 
 func main() {
-	if err := run(); err != nil {
+	if err := run(os.Args[1:]); err != nil {
+		if len(os.Args) > 1 && os.Args[1] == "--session" {
+			_ = json.NewEncoder(os.Stdout).Encode(message{Stage: "error", Error: err.Error()})
+		}
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}

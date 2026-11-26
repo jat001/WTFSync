@@ -32,6 +32,7 @@ tauri-plugin-window-state = "2.5.0"
 base64 = "0.22.1"
 image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
 wow-blp = "=0.7.0"
+sha2 = "0.11.1"
 rfd = { version = "0.18.0", default-features = false, features = ["common-controls-v6"] }
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration

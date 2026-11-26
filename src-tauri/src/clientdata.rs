@@ -1,49 +1,213 @@
 #[cfg(windows)]
 mod windows {
     use base64::{Engine, engine::general_purpose::STANDARD};
+    use serde::Deserialize;
     use std::{
         collections::BTreeMap,
-        io::{Cursor, Write},
+        io::{BufRead, BufReader, Cursor, Write},
         os::windows::process::CommandExt,
-        path::Path,
-        process::{Command, Stdio},
+        path::{Path, PathBuf},
+        process::{Child, ChildStdin, ChildStdout, Command, Stdio},
+        sync::{OnceLock, mpsc},
+        time::Duration,
     };
-    use tauri::Manager;
+    use tauri::{Manager, ipc::Channel};
     use wow_blp::{convert::blp_to_image, parser::load_blp_from_buf};
 
     use super::{Catalog, CatalogRequest};
 
+    const READER_IDLE: Duration = Duration::from_secs(30);
+    type ReadResult = Result<Catalog, String>;
+
+    struct Job {
+        app: tauri::AppHandle,
+        dir: PathBuf,
+        stamp: Option<String>,
+        request: CatalogRequest,
+        preview: Channel<Catalog>,
+        result: mpsc::Sender<ReadResult>,
+    }
+
+    struct Reader {
+        dir: PathBuf,
+        stamp: Option<String>,
+        child: Child,
+        input: ChildStdin,
+        output: BufReader<ChildStdout>,
+    }
+
+    // A separate stage field lets the JSON decoder interpret the payload's numeric map keys.
+    #[derive(Deserialize)]
+    struct Reply {
+        stage: Stage,
+        data: Option<Catalog>,
+        error: Option<String>,
+    }
+
+    #[derive(Deserialize)]
+    #[serde(rename_all = "lowercase")]
+    enum Stage {
+        Preview,
+        Complete,
+        Error,
+    }
+
+    impl Reader {
+        fn start(
+            app: &tauri::AppHandle,
+            dir: &Path,
+            stamp: Option<String>,
+        ) -> Result<Self, String> {
+            let executable = std::env::current_exe()
+                .map_err(|err| err.to_string())?
+                .with_file_name("wtfsync-clientdata.exe");
+            let resource = app.path().resource_dir().map_err(|err| err.to_string())?;
+            let dll = resource.join("CascLib.dll");
+            let mut command = Command::new(executable);
+            command.arg("--session").arg(dir).arg(dll);
+            if let Ok(cache) = app.path().app_cache_dir() {
+                command.arg(cache.join("dbd"));
+            }
+            let mut child = command
+                .creation_flags(0x08000000) // CREATE_NO_WINDOW
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::null())
+                .spawn()
+                .map_err(|err| err.to_string())?;
+            let input = child.stdin.take().expect("piped stdin");
+            let output = BufReader::new(child.stdout.take().expect("piped stdout"));
+            Ok(Self {
+                dir: dir.to_owned(),
+                stamp,
+                child,
+                input,
+                output,
+            })
+        }
+
+        fn query(&mut self, request: CatalogRequest, preview: &Channel<Catalog>) -> ReadResult {
+            let mut input = serde_json::to_vec(&request).map_err(|err| err.to_string())?;
+            input.push(b'\n');
+            self.input
+                .write_all(&input)
+                .map_err(|err| err.to_string())?;
+            let mut first = None;
+            let mut line = Vec::new();
+            loop {
+                line.clear();
+                if self
+                    .output
+                    .read_until(b'\n', &mut line)
+                    .map_err(|err| err.to_string())?
+                    == 0
+                {
+                    return Err("local item reader stopped".into());
+                }
+                let reply: Reply = serde_json::from_slice(&line)
+                    .map_err(|err| format!("invalid local item reader response: {err}"))?;
+                match (reply.stage, reply.data) {
+                    (Stage::Preview, Some(data)) => {
+                        let catalog = decode_images(data);
+                        let _ = preview.send(catalog.clone());
+                        first = Some(catalog);
+                    }
+                    (Stage::Complete, Some(data)) => {
+                        let mut catalog = decode_images(data);
+                        if let Some(first) = first {
+                            catalog.icons.extend(first.icons);
+                            catalog.socket_frames.extend(first.socket_frames);
+                        }
+                        return Ok(catalog);
+                    }
+                    (Stage::Error, _) => {
+                        return Err(reply
+                            .error
+                            .unwrap_or_else(|| "local item reader failed".into()));
+                    }
+                    _ => return Err("local item reader response has no data".into()),
+                }
+            }
+        }
+    }
+
+    impl Drop for Reader {
+        fn drop(&mut self) {
+            let _ = self.child.kill();
+            let _ = self.child.wait();
+        }
+    }
+
+    fn serve(jobs: mpsc::Receiver<Job>) {
+        let mut reader: Option<Reader> = None;
+        loop {
+            let job = match jobs.recv_timeout(READER_IDLE) {
+                Ok(job) => job,
+                Err(mpsc::RecvTimeoutError::Timeout) => {
+                    reader = None;
+                    continue;
+                }
+                Err(mpsc::RecvTimeoutError::Disconnected) => break,
+            };
+            let Job {
+                app,
+                dir,
+                stamp,
+                request,
+                preview,
+                result,
+            } = job;
+            if reader
+                .as_ref()
+                .is_some_and(|r| r.dir != dir || r.stamp != stamp || stamp.is_none())
+            {
+                reader = None;
+            }
+            let keep = stamp.is_some();
+            let response = (|| {
+                if reader.is_none() {
+                    reader = Some(Reader::start(&app, &dir, stamp)?);
+                }
+                reader
+                    .as_mut()
+                    .expect("reader started")
+                    .query(request, &preview)
+            })();
+            if response.is_err() || !keep {
+                reader = None;
+            }
+            let _ = result.send(response);
+        }
+    }
+
     pub(super) fn read(
         app: tauri::AppHandle,
-        dir: &Path,
+        dir: PathBuf,
+        stamp: Option<String>,
         request: CatalogRequest,
-    ) -> Result<Catalog, String> {
-        let executable = std::env::current_exe()
-            .map_err(|err| err.to_string())?
-            .with_file_name("wtfsync-clientdata.exe");
-        let resource = app.path().resource_dir().map_err(|err| err.to_string())?;
-        let dll = resource.join("CascLib.dll");
-        let input = serde_json::to_vec(&request).map_err(|err| err.to_string())?;
-        let mut command = Command::new(executable);
-        command.arg(dir).arg(dll);
-        if let Ok(cache) = app.path().app_cache_dir() {
-            command.arg(cache.join("dbd"));
-        }
-        let mut child = command
-            .creation_flags(0x08000000) // CREATE_NO_WINDOW
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn()
+        preview: Channel<Catalog>,
+    ) -> ReadResult {
+        static WORKER: OnceLock<mpsc::Sender<Job>> = OnceLock::new();
+        let worker = WORKER.get_or_init(|| {
+            let (sender, receiver) = mpsc::channel();
+            std::thread::spawn(move || serve(receiver));
+            sender
+        });
+        let (result, receiver) = mpsc::channel();
+        worker
+            .send(Job {
+                app,
+                dir,
+                stamp,
+                request,
+                preview,
+                result,
+            })
             .map_err(|err| err.to_string())?;
-        let wrote = child.stdin.take().expect("piped stdin").write_all(&input);
-        let output = child.wait_with_output().map_err(|err| err.to_string())?;
-        if !output.status.success() {
-            return Err(String::from_utf8_lossy(&output.stderr).trim().to_owned());
-        }
-        wrote.map_err(|err| err.to_string())?;
-        let mut catalog: Catalog =
-            serde_json::from_slice(&output.stdout).map_err(|err| err.to_string())?;
+        receiver.recv().map_err(|err| err.to_string())?
+    }
+
+    fn decode_images(mut catalog: Catalog) -> Catalog {
         let icons: BTreeMap<_, _> = catalog
             .icons
             .into_iter()
@@ -54,7 +218,7 @@ mod windows {
             std::mem::take(&mut catalog.socket_atlases),
             std::mem::take(&mut catalog.socket_regions),
         );
-        Ok(catalog)
+        catalog
     }
 
     fn decode_icon(encoded: &str) -> Option<String> {
@@ -129,6 +293,19 @@ mod windows {
         use image::{DynamicImage, Rgba, RgbaImage};
 
         #[test]
+        fn reads_sidecar_preview_with_numeric_icon_and_socket_keys() {
+            let reply: Reply = serde_json::from_str(
+                r#"{"stage":"preview","data":{"tables":{"Item":{"30":{"IconFileDataID":123}}},"icons":{"123":"blp"},"socketAtlases":{"345":"atlas"},"socketRegions":{"2":{"file":345,"left":0,"top":0,"width":16,"height":16}},"incomplete":false}}"#,
+            )
+            .unwrap();
+            assert!(matches!(reply.stage, Stage::Preview));
+            let data = reply.data.unwrap();
+            assert_eq!(data.icons[&123], "blp");
+            assert_eq!(data.socket_atlases[&345], "atlas");
+            assert_eq!(data.socket_regions[&2].file, 345);
+        }
+
+        #[test]
         fn opaque_icons_use_jpeg() {
             let image = DynamicImage::ImageRgba8(RgbaImage::from_pixel(4, 4, Rgba([1, 2, 3, 255])));
             let url = encode_icon(&image).expect("encode image");
@@ -168,7 +345,7 @@ pub struct CatalogRequest {
     socket_art: bool,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Catalog {
     #[serde(default, skip_serializing)]
@@ -182,7 +359,7 @@ pub struct Catalog {
     incomplete: bool,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 struct SocketRegion {
     file: u32,
     left: u32,
@@ -195,7 +372,9 @@ struct SocketRegion {
 pub async fn inventory_catalog(
     app: tauri::AppHandle,
     game_dir: PathBuf,
+    stamp: Option<String>,
     request: CatalogRequest,
+    preview: tauri::ipc::Channel<Catalog>,
 ) -> Result<Catalog, String> {
     if !game_dir.is_absolute()
         || request.items.len() > 2_048
@@ -203,6 +382,7 @@ pub async fn inventory_catalog(
         || request.icon_ids.len() > 2_048
         || request.known_icons.len() > 16_384
         || request.known_socket_frames.len() > 7
+        || stamp.as_ref().is_some_and(|s| s.len() > 4096)
     {
         return Err("invalid local item catalog request".into());
     }
@@ -217,9 +397,11 @@ pub async fn inventory_catalog(
     }
     #[cfg(windows)]
     {
-        tauri::async_runtime::spawn_blocking(move || windows::read(app, &game_dir, request))
-            .await
-            .map_err(|err| err.to_string())?
+        tauri::async_runtime::spawn_blocking(move || {
+            windows::read(app, dir, stamp, request, preview)
+        })
+        .await
+        .map_err(|err| err.to_string())?
     }
     #[cfg(not(windows))]
     Err("local client assets are supported on Windows".into())

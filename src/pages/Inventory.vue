@@ -83,15 +83,7 @@ const slotIcons = computed(() => {
   }
   return [...ids].sort((a, b) => a - b)
 })
-const {
-  catalog,
-  state: catalogState,
-  invalidate: invalidateCatalog,
-} = useItemCatalog(gameDir, catalogItems, data, slotIcons)
-function refresh() {
-  invalidateCatalog()
-  reload()
-}
+const { catalog, state: catalogState } = useItemCatalog(gameDir, catalogItems, data, slotIcons)
 const emptyText = computed(() => {
   if (view.value === 'guild') {
     if (!guild.value) return '该账号没有公会记录'
@@ -147,7 +139,7 @@ function inspect(box: Container, slot: InventorySlot) {
           variant="outline"
           size="sm"
           :loading="loading"
-          @click="refresh"
+          @click="reload"
         />
       </div>
     </header>

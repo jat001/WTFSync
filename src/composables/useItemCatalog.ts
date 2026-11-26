@@ -1,164 +1,215 @@
-import { invoke } from '@tauri-apps/api/core'
+import { Channel, invoke } from '@tauri-apps/api/core'
 import { computed, shallowRef, watch, type Ref } from 'vue'
-
-import { BoundedCache } from '../core/bounded-cache'
 import { dirname, joinPath, pathKey } from '../core/paths'
 import { tauriFs } from '../core/tauri-fs'
 import { catalogRequest, type ItemCatalog } from '../lib/item-catalog'
-import { CatalogImageCache } from '../lib/item-catalog-cache'
 import { catalogRecords, mergeCatalogTables } from '../lib/item-catalog-data'
 import { isTauri } from '../lib/tauri'
 import type { InventoryItem } from '../profiles/syndicator/inventory'
 
-interface CachedRecord {
-  tables: ItemCatalog['tables']
-  incomplete: boolean
-  expiresAt: number
+interface Scopes {
+  records: string
+  images: string
 }
 
-const records = new BoundedCache<string, CachedRecord>(16_384, 32 * 1024 * 1024)
-const images = new CatalogImageCache(16_384, 64 * 1024 * 1024)
-const frameIds = [1, 2, 3, 4, 6, 7]
-const pending = new Map<string, Promise<ItemCatalog>>()
-const directoryPrefix = (dir: string) => pathKey(dir) + '\0'
+interface CacheData {
+  records: Record<string, { tables: ItemCatalog['tables']; incomplete: boolean }>
+  icons: ItemCatalog['icons']
+  socketFrames: ItemCatalog['icons']
+  knownIcons?: number[]
+}
 
-async function clientStamp(dir: string) {
+type CatalogRequest = ReturnType<typeof catalogRequest> & { icon_ids: number[] }
+type ShowCatalog = (catalog: ItemCatalog) => void
+
+const frameIds = [1, 2, 3, 4, 6, 7]
+const pending = new Map<string, { promise: Promise<ItemCatalog>; listeners: Set<ShowCatalog> }>()
+const emptyCache = (): CacheData => ({ records: {}, icons: {}, socketFrames: {} })
+const emptyCatalog = (): ItemCatalog => ({ tables: {}, icons: {}, incomplete: false })
+
+async function clientStamp(dir: string): Promise<Scopes | undefined> {
   const root = dirname(dir)
   const paths = [
     joinPath(dir, '.flavor.info'),
     joinPath(root, '.build.info'),
-    joinPath(dir, 'Cache', 'ADB', 'zhCN', 'DBCache.bin'),
     joinPath(root, 'Data', 'data'),
+    joinPath(dir, 'Cache', 'ADB', 'zhCN', 'DBCache.bin'),
   ]
   const stats = await Promise.all(paths.map((path) => tauriFs.stat(path)))
-  if (stats.some((info) => info && info.modifiedAt === null)) return undefined
-  return JSON.stringify(stats.map((info) => (info ? [info.modifiedAt, info.size] : null)))
+  if (!stats[0] || !stats[1] || stats.some((info) => info && info.modifiedAt === null)) {
+    return undefined
+  }
+  const signatures = stats.map((info) => (info ? [info.modifiedAt, info.size] : null))
+  const images = JSON.stringify([pathKey(dir), ...signatures.slice(0, 3)])
+  return { images, records: JSON.stringify([images, signatures[3]]) }
 }
 
-async function loadCatalog(
+function readCache(scopes: Scopes, request: CatalogRequest, frames = true) {
+  return invoke<CacheData>('inventory_cache', {
+    request: { read: { scopes, ...request, frames } },
+  }).catch(emptyCache)
+}
+
+function iconIds(catalog: ItemCatalog, extra: number[]) {
+  const ids = new Set(extra)
+  for (const entry of Object.values(catalog.tables.Item ?? {})) {
+    if (typeof entry?.IconFileDataID === 'number' && entry.IconFileDataID > 0) {
+      ids.add(entry.IconFileDataID)
+    }
+  }
+  return [...ids]
+}
+
+function hasSockets(catalog: ItemCatalog) {
+  return Object.values(catalog.tables.ItemSparse ?? {}).some(
+    (row) =>
+      row?.Gem_properties || (Array.isArray(row?.SocketType) && row.SocketType.some(Boolean)),
+  )
+}
+
+async function queryCatalog(
   dir: string,
-  key: string,
-  request: ReturnType<typeof catalogRequest> & { icon_ids: number[] },
+  input: CatalogRequest,
+  scopes: Scopes | undefined,
+  show: ShowCatalog,
+  retry = true,
 ): Promise<ItemCatalog> {
-  const read = (input: typeof request) =>
-    invoke<ItemCatalog>('inventory_catalog', { gameDir: dir, request: input })
-  const stamp = await clientStamp(dir).catch(() => undefined)
-  if (stamp === undefined) return read(request)
-  const scope = directoryPrefix(dir) + stamp + '\0'
-  const id = scope + key
-  const active = pending.get(id)
-  if (active) return active
+  const cached = scopes ? await readCache(scopes, input) : emptyCache()
+  const base = emptyCatalog()
+  const missing = {
+    items: input.items.filter((id) => !cached.records['item:' + id]),
+    enchants: input.enchants.filter((id) => !cached.records['enchant:' + id]),
+  }
+  for (const record of Object.values(cached.records)) {
+    mergeCatalogTables(base.tables, record.tables)
+    base.incomplete ||= record.incomplete
+  }
+  const missingIcons = iconIds(base, input.icon_ids).filter((id) => cached.icons[id] === undefined)
+  const knownIcons = new Set(cached.knownIcons)
+  const socketArt =
+    hasSockets(base) && frameIds.some((frameId) => cached.socketFrames[frameId] === undefined)
 
-  const isCurrent = () => pending.get(id) === load
-  const load: Promise<ItemCatalog> = (async () => {
-    const catalog: ItemCatalog = { tables: {}, icons: {}, incomplete: false }
-    const data = [
-      { kind: 'item', ids: request.items },
-      { kind: 'enchant', ids: request.enchants },
-    ] as const
-    const missing = data.map(({ kind, ids }) =>
-      ids.filter((recordId) => {
-        const record = records.get(scope + kind + ':' + recordId)
-        if (!record || record.expiresAt <= Date.now()) return true
-        mergeCatalogTables(catalog.tables, record.tables)
-        catalog.incomplete ||= record.incomplete
-        return false
-      }),
-    )
-    const iconIds = () => {
-      const ids = new Set(request.icon_ids)
-      for (const entry of Object.values(catalog.tables.Item ?? {})) {
-        if (typeof entry?.IconFileDataID === 'number' && entry.IconFileDataID > 0) {
-          ids.add(entry.IconFileDataID)
-        }
-      }
-      return [...ids]
+  async function assemble(response = emptyCatalog()) {
+    const catalog = emptyCatalog()
+    catalog.incomplete = base.incomplete || response.incomplete
+    mergeCatalogTables(catalog.tables, base.tables)
+    mergeCatalogTables(catalog.tables, response.tables)
+    const ids = iconIds(catalog, input.icon_ids)
+    const late = ids.filter((id) => knownIcons.has(id) && cached.icons[id] === undefined)
+    if (scopes && late.length) {
+      const read = await readCache(scopes, { items: [], enchants: [], icon_ids: late }, false)
+      Object.assign(cached.icons, read.icons)
     }
-    const hasSockets = () =>
-      Object.values(catalog.tables.ItemSparse ?? {}).some(
-        (row) =>
-          row?.Gem_properties || (Array.isArray(row?.SocketType) && row.SocketType.some(Boolean)),
-      )
-
-    const missingIcons = iconIds().filter(
-      (iconId) => images.get(scope, 'icon', iconId) === undefined,
-    )
-    const socketArt =
-      hasSockets() && frameIds.some((frameId) => images.get(scope, 'frame', frameId) === undefined)
-    let response: ItemCatalog | undefined
-    let knownIcons: ItemCatalog['icons'] = {}
-    let knownFrames: ItemCatalog['icons'] = {}
-    if (missing.some((ids) => ids.length) || missingIcons.length || socketArt) {
-      knownIcons = images.known(scope, 'icon')
-      knownFrames = images.known(scope, 'frame')
-      const input = {
-        items: missing[0],
-        enchants: missing[1],
-        icon_ids: missingIcons,
-        known_icons: Object.keys(knownIcons).map(Number),
-        known_socket_frames: Object.keys(knownFrames).map(Number),
-        socket_art: socketArt,
-      }
-      response = await read(input).catch((error: unknown) => {
-        if (!Object.keys(catalog.tables.ItemSparse ?? {}).length) throw error
-        catalog.incomplete = true
-        return undefined
-      })
+    for (const id of ids) {
+      const url = response.icons[id] ?? cached.icons[id]
+      if (url) catalog.icons[id] = url
     }
-    if (response) {
-      // Do not combine old images with rows from a client patched during the read.
-      if ((await clientStamp(dir).catch(() => undefined)) !== stamp) return read(request)
-
-      const split = catalogRecords(response.tables)
-      for (const [index, { kind }] of data.entries()) {
-        for (const recordId of missing[index]) {
-          const tables = split(kind, recordId)
-          const incomplete =
-            response.incomplete ||
-            !(kind === 'item'
-              ? tables.ItemSparse?.[recordId]
-              : tables.SpellItemEnchantment?.[recordId])
-          catalog.incomplete ||= incomplete
-          mergeCatalogTables(catalog.tables, tables)
-          if (isCurrent()) {
-            const recordKey = scope + kind + ':' + recordId
-            const size = 2 * (recordKey.length + JSON.stringify(tables).length)
-            records.set(
-              recordKey,
-              { tables, incomplete, expiresAt: incomplete ? Date.now() + 30_000 : Infinity },
-              size,
-            )
-          }
-        }
-      }
-    }
-    for (const iconId of iconIds()) {
-      let url = response?.icons[iconId] ?? knownIcons[iconId] ?? images.get(scope, 'icon', iconId)
-      if (response && knownIcons[iconId] === undefined && isCurrent()) {
-        url = images.set(scope, 'icon', iconId, url ?? '')
-      }
-      if (url) catalog.icons[iconId] = url
-    }
-    if (hasSockets()) {
+    if (hasSockets(catalog)) {
       catalog.socketFrames = {}
-      for (const frameId of frameIds) {
-        let url =
-          response?.socketFrames?.[frameId] ??
-          knownFrames[frameId] ??
-          images.get(scope, 'frame', frameId)
-        if (response && knownFrames[frameId] === undefined && isCurrent()) {
-          url = images.set(scope, 'frame', frameId, url ?? '')
-        }
-        if (url) catalog.socketFrames[frameId] = url
+      for (const id of frameIds) {
+        const url = response.socketFrames?.[id] ?? cached.socketFrames[id]
+        if (url) catalog.socketFrames[id] = url
       }
     }
     return catalog
-  })()
-  pending.set(id, load)
+  }
+
+  if (!(missing.items.length || missing.enchants.length || missingIcons.length || socketArt)) {
+    return assemble()
+  }
+  if (Object.keys(cached.records).length || Object.values(cached.icons).some(Boolean)) {
+    show(await assemble())
+  }
+
+  let finished = false
+  const current = () => clientStamp(dir).catch(() => undefined)
+  const preview = new Channel<ItemCatalog>((data) => {
+    void (async () => {
+      if (finished || (scopes && (await current())?.records !== scopes.records)) return
+      const catalog = await assemble(data)
+      if (!finished) show(catalog)
+    })()
+  })
+  let response: ItemCatalog
   try {
-    return await load
+    response = await invoke<ItemCatalog>('inventory_catalog', {
+      gameDir: dir,
+      stamp: scopes?.records ?? null,
+      preview,
+      request: {
+        ...missing,
+        icon_ids: missingIcons,
+        known_icons: [...knownIcons],
+        known_socket_frames: Object.keys(cached.socketFrames).map(Number),
+        socket_art: socketArt,
+      },
+    })
+  } catch (error: unknown) {
+    if (!Object.keys(base.tables.ItemSparse ?? {}).length) throw error
+    return assemble({ ...emptyCatalog(), incomplete: true })
   } finally {
-    if (pending.get(id) === load) pending.delete(id)
+    finished = true
+  }
+
+  const latest = scopes ? await current() : undefined
+  if (scopes && latest?.records !== scopes.records) {
+    if (!retry) throw new Error('client files changed during catalog read')
+    show(emptyCatalog())
+    return queryCatalog(dir, input, latest, show, false)
+  }
+
+  const catalog = await assemble(response)
+  if (scopes) {
+    const data = emptyCache()
+    const split = catalogRecords(response.tables)
+    for (const [kind, ids] of [
+      ['item', missing.items],
+      ['enchant', missing.enchants],
+    ] as const) {
+      for (const id of ids) {
+        const tables = split(kind, id)
+        const incomplete =
+          response.incomplete ||
+          !(kind === 'item' ? tables.ItemSparse?.[id] : tables.SpellItemEnchantment?.[id])
+        data.records[kind + ':' + id] = { tables, incomplete }
+        catalog.incomplete ||= incomplete
+      }
+    }
+    for (const id of iconIds(catalog, input.icon_ids)) {
+      if (cached.icons[id] === undefined && (!knownIcons.has(id) || response.icons[id])) {
+        data.icons[id] = response.icons[id] ?? ''
+      }
+    }
+    if (hasSockets(catalog)) {
+      for (const id of frameIds) {
+        if (cached.socketFrames[id] === undefined) {
+          data.socketFrames[id] = response.socketFrames?.[id] ?? ''
+        }
+      }
+    }
+    show(catalog)
+    await invoke('inventory_cache', { request: { write: { scopes, data } } }).catch(() => undefined)
+  }
+  return catalog
+}
+
+async function loadCatalog(dir: string, key: string, input: CatalogRequest, show: ShowCatalog) {
+  const scopes = await clientStamp(dir).catch(() => undefined)
+  const id = JSON.stringify([pathKey(dir), scopes?.records, key])
+  const active = pending.get(id)
+  if (active) {
+    active.listeners.add(show)
+    return active.promise
+  }
+  const listeners = new Set([show])
+  const promise = queryCatalog(dir, input, scopes, (catalog) => {
+    for (const listener of listeners) listener(catalog)
+  })
+  pending.set(id, { promise, listeners })
+  try {
+    return await promise
+  } finally {
+    pending.delete(id)
   }
 }
 
@@ -190,7 +241,9 @@ export function useItemCatalog(
       if (!dir || !isTauri || (!input.items.length && !input.icon_ids.length)) return
       if (!catalog.value) state.value = 'loading'
       try {
-        const result = await loadCatalog(dir, id, input)
+        const result = await loadCatalog(dir, id, input, (partial) => {
+          if (active) catalog.value = partial
+        })
         if (active) {
           catalog.value = result
           state.value =
@@ -199,19 +252,10 @@ export function useItemCatalog(
               : 'unavailable'
         }
       } catch {
-        if (active) {
-          catalog.value = undefined
-          state.value = 'unavailable'
-        }
+        if (active) state.value = 'unavailable'
       }
     },
     { immediate: true },
   )
-  function invalidate() {
-    const prefix = directoryPrefix(gameDir.value)
-    for (const key of records.keys()) if (key.startsWith(prefix)) records.delete(key)
-    images.deletePrefix(prefix)
-    for (const key of pending.keys()) if (key.startsWith(prefix)) pending.delete(key)
-  }
-  return { catalog, state, invalidate }
+  return { catalog, state }
 }
