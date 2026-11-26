@@ -19,12 +19,12 @@
 
 ## 按改动定位代码
 
-| 改动 | 入口与职责 |
-| --- | --- |
-| 同步流程 | `src/composables/useSync.ts` 管理账号选择、启动同步和监听。`src/core/engine.ts` 串行执行同步、校验输出路径并按内容写入；游戏目录识别、账号扫描和文件监听也在 `src/core/`。 |
-| 插件数据 | `src/core/profile.ts` 定义插件接口，`src/profiles/index.ts` 注册实现。BGLite 的存档解析、角色总览、账单和角色删除在 `src/profiles/biaoge/`；游戏内加载器与清单模板在 `addons/BiaoGeAccounts/`。 |
-| 界面与状态 | `src/App.vue` 组织页面，`src/pages/` 和 `src/components/` 实现界面。`src/composables/` 协调设置、同步和账单状态。 |
-| 桌面集成 | `src/core/tauri-fs.ts` 对接 Tauri 文件系统。`src-tauri/src/lib.rs` 注册插件和原生命令，`src-tauri/capabilities/` 声明权限，`src-tauri/tauri.conf.json` 配置开发服务器和构建入口。 |
+| 改动       | 入口与职责                                                                                                                                                                                      |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 同步流程   | `src/composables/useSync.ts` 管理账号选择、启动同步和监听。`src/core/engine.ts` 串行执行同步、校验输出路径并按内容写入；游戏目录识别、账号扫描和文件监听也在 `src/core/`。                      |
+| 插件数据   | `src/core/profile.ts` 定义插件接口，`src/profiles/index.ts` 注册实现。BGLite 的存档解析、角色总览、账单和角色删除在 `src/profiles/biaoge/`；游戏内加载器与清单模板在 `addons/BiaoGeAccounts/`。 |
+| 界面与状态 | `src/App.vue` 组织页面，`src/pages/` 和 `src/components/` 实现界面。`src/composables/` 协调设置、同步和账单状态。                                                                               |
+| 桌面集成   | `src/core/tauri-fs.ts` 对接 Tauri 文件系统。`src-tauri/src/lib.rs` 注册插件和原生命令，`src-tauri/capabilities/` 声明权限，`src-tauri/tauri.conf.json` 配置开发服务器和构建入口。               |
 
 修改同步逻辑时，保留单账号失败时其他账号继续同步的行为。BGLite 会为读取失败的账号保留已有输出，清理账号文件时以旧插件清单为依据。普通同步只读原始 SavedVariables；角色删除是单独的写入流程，需保留界面确认和写入前备份。修改设置结构时，检查 `useSettings.ts` 中的默认值、已有配置迁移和按游戏目录区分的账号选择。
 
