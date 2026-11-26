@@ -12,6 +12,7 @@ import { formatGold } from '../lib/gold'
 import { failureLabels } from '../lib/sync-text'
 import { formatTime } from '../lib/time'
 import { gameVersionItems } from '../lib/wow-flavors'
+import { shortRealmName } from '../lib/wow-realms'
 import type { RaidBill } from '../profiles/biaoge/bills'
 
 const { settings } = useSettings()
@@ -104,7 +105,8 @@ const columns: TableColumn<RaidBill>[] = [
 
 function billContext(bill: RaidBill): string {
   const time = bill.at === undefined ? undefined : formatTime(bill.at)
-  return [kindLabels[bill.kind], bill.account, bill.realm, time].filter(Boolean).join(' · ')
+  const realm = bill.realm && shortRealmName(bill.realm)
+  return [kindLabels[bill.kind], bill.account, realm, time].filter(Boolean).join(' · ')
 }
 
 const selected = computed(() => allBills.value.find(({ id }) => id === selectedId.value))

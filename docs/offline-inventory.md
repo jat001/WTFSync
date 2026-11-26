@@ -70,7 +70,7 @@ DB2 查询包括基础装等、属性、护甲、耐久上限、装备效果、�
 
 ## 账号和角色选择
 
-本机设置中的 `inventorySelections` 按规范化的游戏目录保存上次选择的账号，并为各账号保存上次选择的角色。游戏版本目录属于键的一部分。暂时读不到保存的账号或角色时，界面选取可用项，保留用户原来的选择。用户主动选择时才更新设置。 [选择逻辑](../src/composables/useInventorySelection.ts) · [设置 schema 与持久化](../src/composables/useSettings.ts)
+本机设置中的 `inventorySelections` 按规范化的游戏目录保存上次选择的账号，并为各账号保存上次选择的角色。游戏版本目录属于键的一部分。服务器选择从角色记录恢复，切换服务器时选中该服的首个角色。暂时读不到保存的账号或角色时，界面选取可用项，保留用户原来的选择。用户主动选择时才更新设置。 [选择逻辑](../src/composables/useInventorySelection.ts) · [设置 schema 与持久化](../src/composables/useSettings.ts)
 
 ## 缓存
 

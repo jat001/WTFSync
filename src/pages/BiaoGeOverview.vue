@@ -15,6 +15,7 @@ import { failureLabels } from '../lib/sync-text'
 import { formatTime } from '../lib/time'
 import { wowClasses } from '../lib/wow-classes'
 import { gameVersionItems } from '../lib/wow-flavors'
+import { shortRealmName } from '../lib/wow-realms'
 import { biaoge, loadBiaoGeOverview } from '../profiles/biaoge'
 import { BiaoGeSaveChangedError, deleteBiaoGeCharacter } from '../profiles/biaoge/delete-character'
 import { activeRaidLocks, type OverviewCharacter, type RaidLock } from '../profiles/biaoge/overview'
@@ -114,7 +115,7 @@ const allCharacters = computed(() =>
 const realms = computed(() => {
   const names = new Map<number, string>()
   for (const { realmId, realm } of allCharacters.value) {
-    if (!names.has(realmId) || realm !== String(realmId)) names.set(realmId, realm)
+    if (!names.has(realmId) || realm !== String(realmId)) names.set(realmId, shortRealmName(realm))
   }
   return names
 })
@@ -185,7 +186,7 @@ function characterKey({ account, realmId, name }: OverviewCharacter): string {
 }
 
 function realmName({ realmId, realm }: OverviewCharacter): string {
-  const name = realms.value.get(realmId) ?? realm
+  const name = realms.value.get(realmId) ?? shortRealmName(realm)
   return name === String(realmId) ? `服务器 ${realmId}` : name
 }
 

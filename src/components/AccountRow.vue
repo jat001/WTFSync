@@ -6,6 +6,7 @@ import type { Character } from '../core/profile'
 import { failureLabels } from '../lib/sync-text'
 import { formatTime } from '../lib/time'
 import { wowClasses } from '../lib/wow-classes'
+import { shortRealmName } from '../lib/wow-realms'
 
 const { account, selected, synced } = defineProps<{
   account: AccountInfo
@@ -31,9 +32,10 @@ const detail = computed(() => {
 const realms = computed(() => {
   const groups = new Map<string, Character[]>()
   for (const character of account.characters) {
-    const list = groups.get(character.realm) ?? []
+    const realm = shortRealmName(character.realm)
+    const list = groups.get(realm) ?? []
     list.push(character)
-    groups.set(character.realm, list)
+    groups.set(realm, list)
   }
   return [...groups].map(([realm, characters]) => ({
     realm,
@@ -95,7 +97,7 @@ function characterTitle(character: Character): string {
         <div class="mt-1 flex flex-wrap gap-1.5">
           <UBadge
             v-for="character in group.characters"
-            :key="character.name"
+            :key="JSON.stringify([character.realm, character.name])"
             color="neutral"
             variant="soft"
             size="sm"

@@ -8,6 +8,7 @@ import {
 } from '../../core/lua/ast'
 import { ProfileDataError } from '../../core/profile'
 import { equipmentSlots } from '../../lib/equipment-slots'
+import { shortRealmName } from '../../lib/wow-realms'
 
 export const syndicator = { sourceFiles: ['Syndicator.lua'] } as const
 export type InventoryView = 'equipped' | 'bags' | 'bank' | 'guild' | 'warband'
@@ -190,7 +191,7 @@ function label(key: string, owner: LuaNode, field: string) {
   const details = valueOf(owner, 'details')
   const name = asString(valueOf(details, field))
   const realm = asString(valueOf(details, 'realm'))
-  return name && realm ? `${name} · ${realm}` : key
+  return name && realm ? `${name} · ${shortRealmName(realm)}` : key
 }
 
 function readWarband(node: LuaNode | undefined): BankInventory | undefined {

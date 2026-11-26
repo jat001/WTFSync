@@ -39,8 +39,17 @@ watch(isRetail, (retail) => {
 })
 const guildId = ref('')
 const search = ref('')
-const { account, accountId, accountOptions, character, characterId, characterOptions } =
-  useInventorySelection(gameDir, data)
+const {
+  account,
+  accountId,
+  accountOptions,
+  selectedRealm,
+  realmOptions,
+  character,
+  characterId,
+  characterOptions,
+} = useInventorySelection(gameDir, data)
+const showsCharacter = computed(() => view.value !== 'guild' && view.value !== 'warband')
 const guildOptions = computed(
   () => account.value?.guilds.map((g) => ({ value: g.key, label: g.label })) ?? [],
 )
@@ -201,13 +210,14 @@ function inspect(box: Container, slot: InventorySlot) {
           >
             <AppSelect v-model="guildId" :items="guildOptions" aria-label="公会" />
           </UFormField>
-          <UFormField
-            v-if="view !== 'guild' && view !== 'warband' && characterOptions.length"
-            label="角色"
-            class="max-w-full"
-          >
-            <AppSelect v-model="characterId" :items="characterOptions" aria-label="角色" />
-          </UFormField>
+          <template v-if="showsCharacter && characterOptions.length">
+            <UFormField label="服务器" class="max-w-full">
+              <AppSelect v-model="selectedRealm" :items="realmOptions" aria-label="服务器" />
+            </UFormField>
+            <UFormField label="角色" class="max-w-full">
+              <AppSelect v-model="characterId" :items="characterOptions" aria-label="角色" />
+            </UFormField>
+          </template>
           <span v-if="account.modifiedAt" class="pb-1 text-xs text-muted"
             >存档更新于 {{ formatTime(account.modifiedAt) }}</span
           >

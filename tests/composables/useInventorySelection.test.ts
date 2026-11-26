@@ -68,3 +68,55 @@ it('remembers selections by game directory and account through temporary fallbac
     }),
   )
 })
+
+it('filters characters by realm and groups renamed Time realms under their base name', async () => {
+  const { useInventorySelection } = await import('../../src/composables/useInventorySelection')
+  const { settingsReady } = await import('../../src/composables/useSettings')
+  await settingsReady
+  const gameDir = shallowRef('D:\\WoW\\_classic_titan_')
+  const [first, second] = account('A').characters
+  const data = shallowRef({
+    accounts: [
+      {
+        ...account('A'),
+        characters: [
+          { ...first, name: '同名', realm: '时光II - 示例公会' },
+          { ...second, name: '小号', realm: '时光II旧冠名' },
+          { ...first, key: 'A3', name: '同名', realm: '时光III-示例公会' },
+          { ...first, key: 'A4', name: '其他角色', realm: '时光之穴' },
+          { ...first, key: 'A5', label: '旧角色' },
+        ],
+      },
+    ],
+  })
+  const { selectedRealm, realmOptions, character, characterId, characterOptions } =
+    useInventorySelection(gameDir, data)
+
+  expect(realmOptions.value.map(({ label }) => label).sort()).toEqual([
+    '时光II',
+    '时光III',
+    '时光之穴',
+    '未知服务器',
+  ])
+  expect(selectedRealm.value).toBe('时光II')
+  expect(characterOptions.value).toEqual([
+    { value: 'A1', label: '同名' },
+    { value: 'A2', label: '小号' },
+  ])
+  characterId.value = 'A2'
+  expect(character.value?.realm).toBe('时光II旧冠名')
+
+  selectedRealm.value = '时光III'
+  expect(characterOptions.value).toEqual([{ value: 'A3', label: '同名' }])
+  expect(characterId.value).toBe('A3')
+  characterId.value = 'A1'
+  expect(characterId.value).toBe('A3')
+  expect(useInventorySelection(gameDir, data).selectedRealm.value).toBe('时光III')
+
+  selectedRealm.value = '未知服务器'
+  expect(characterOptions.value).toEqual([{ value: 'A5', label: '旧角色' }])
+  expect(characterId.value).toBe('A5')
+  await vi.waitFor(() =>
+    expect(stored.inventorySelections?.['d:/wow/_classic_titan_']?.characters).toEqual({ A: 'A5' }),
+  )
+})
