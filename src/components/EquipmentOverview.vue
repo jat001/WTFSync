@@ -70,7 +70,7 @@ const groups = computed(() => {
             item && (armoryQualityColors[item.quality ?? 1] ?? itemQualityColor(item.quality)),
           lightQualityColor: lightQualityColors[item?.quality ?? 1] ?? lightQualityColors[1],
           level: item && itemLevel(props.catalog, item),
-          icon: item && itemIcon(props.catalog, item.id),
+          icon: item && itemIcon(props.catalog, item.id, item.iconTexture),
           emptyIcon: !item ? props.catalog?.icons[equipmentSlotTextures[index - 1]] : undefined,
           emptyLabel: `${slot.label}（${slot.recorded ? '空栏位' : '未记录'}）`,
           enchant: enchantDetails(props.catalog, item?.enchant),

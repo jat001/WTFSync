@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vite-plus/test'
 import { effectScope, shallowRef } from 'vue'
-import type { ItemCatalog } from '../../src/lib/item-catalog'
+import { itemIcon, type ItemCatalog } from '../../src/lib/item-catalog'
 import { MemoryFileSystem } from '../helpers/memory-fs'
 
 const fs = new MemoryFileSystem()
@@ -197,6 +197,36 @@ it('loads and reopens empty-slot art with no item records', async () => {
     await vi.waitFor(() => expect(invoke.mock.calls).toHaveLength(calls + 1))
     expect(catalog.value).toEqual(payload)
     expect(native).toHaveBeenCalledTimes(1)
+  } finally {
+    scope.stop()
+  }
+})
+
+it('uses the recorded instance texture when the client item has no default icon', async () => {
+  const { useItemCatalog } = await import('../../src/composables/useItemCatalog')
+  const dir = client('C:\\WoWArtifact')
+  const artifact = { id: 128861, name: '泰坦之击', iconTexture: 1280945, gems: [] }
+  const scope = effectScope()
+  native.mockClear().mockResolvedValueOnce({
+    tables: {
+      Item: { 128861: { IconFileDataID: 0 } },
+      ItemSparse: { 128861: { Display_lang: artifact.name } },
+    },
+    icons: { 1280945: icon },
+    incomplete: false,
+  })
+  try {
+    const { catalog, state } = scope.run(() =>
+      useItemCatalog(dir, shallowRef([artifact]), shallowRef({}), shallowRef([1280945])),
+    )!
+    await vi.waitFor(() => expect(state.value).toBe('available'))
+    expect(itemIcon(catalog.value, artifact.id, artifact.iconTexture)).toBe(icon)
+    expect(native).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        request: expect.objectContaining({ items: [128861], icon_ids: [1280945] }),
+      }),
+    )
+    expect(itemIcon(catalogFor(ring.name), ring.id, 1280945)).toBe(icon)
   } finally {
     scope.stop()
   }

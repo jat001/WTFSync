@@ -137,22 +137,37 @@ function table(catalog: ItemCatalog, name: string) {
   return Object.values(catalog.tables[name] ?? {}).filter((entry): entry is Row => !!entry)
 }
 
-export function catalogRequest(items: readonly InventoryItem[]) {
+export function catalogRequest(
+  items: readonly InventoryItem[],
+  additionalIcons: readonly number[] = [],
+) {
   const ids = new Set<number>()
   const enchants = new Set<number>()
   const valid = (id: number | undefined): id is number =>
     Number.isInteger(id) && id! > 0 && id! <= 0x7fffffff
+  const icons = new Set(additionalIcons.filter(valid))
   for (const item of items) {
     if (valid(item.id)) ids.add(item.id)
     if (valid(item.enchant)) enchants.add(item.enchant)
+    if (valid(item.iconTexture)) icons.add(item.iconTexture)
     for (const gem of item.gems) if (valid(gem)) ids.add(gem)
   }
-  return { items: [...ids].sort((a, b) => a - b), enchants: [...enchants].sort((a, b) => a - b) }
+  return {
+    items: [...ids].sort((a, b) => a - b),
+    enchants: [...enchants].sort((a, b) => a - b),
+    icon_ids: [...icons].sort((a, b) => a - b),
+  }
 }
 
-export function itemIcon(catalog: ItemCatalog | undefined, id: number | undefined) {
-  if (!catalog || !id) return undefined
-  const texture = number(catalog.tables.Item?.[id], 'IconFileDataID')
+export function itemIcon(
+  catalog: ItemCatalog | undefined,
+  id: number | undefined,
+  iconTexture?: number,
+) {
+  if (!catalog) return undefined
+  const instance = iconTexture && catalog.icons[iconTexture]
+  if (instance) return instance
+  const texture = id && number(catalog.tables.Item?.[id], 'IconFileDataID')
   return (texture && catalog.icons[texture]) || undefined
 }
 

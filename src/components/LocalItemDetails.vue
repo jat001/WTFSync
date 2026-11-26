@@ -12,7 +12,7 @@ const props = defineProps<{
 }>()
 
 const lines = computed(() => itemLines(props.catalog, props.item, props.equipped))
-const icon = computed(() => itemIcon(props.catalog, props.item.id))
+const icon = computed(() => itemIcon(props.catalog, props.item.id, props.item.iconTexture))
 </script>
 
 <template>

@@ -6,7 +6,7 @@ import { createInventoryLoader } from '../../../src/profiles/syndicator/load'
 import { MemoryFileSystem } from '../../helpers/memory-fs'
 
 const ring =
-  '{itemID=30,itemLink="|cffa335ee|Hitem:30:14:15:::::77|h[月石指环]|h|r",itemCount=1,quality=4,isBound=false}'
+  '{itemID=30,itemLink="|cffa335ee|Hitem:30:14:15:::::77|h[月石指环]|h|r",itemCount=1,quality=4,isBound=false,iconTexture=123}'
 function snapshot(character: string) {
   return `SYNDICATOR_DATA={Characters={["${character}"]={
     details={character="${character}",realm="示例服"},
@@ -31,7 +31,7 @@ describe('Syndicator inventory', () => {
     expect(formatCopper(g.money)).toBe('0 金')
     expect(c.equipped[0].slots.find((slot) => slot.index === 11)).toMatchObject({
       label: '戒指一',
-      item: { name: '月石指环', enchant: 14, gems: [15], bound: false },
+      item: { name: '月石指环', enchant: 14, gems: [15], bound: false, iconTexture: 123 },
     })
     expect(c.equipped[0].slots[11]).toMatchObject({ recorded: true, item: undefined })
     expect(c.bags[0].slots.map((x) => x.item?.id)).toEqual([undefined, 30, undefined])

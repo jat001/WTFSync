@@ -19,7 +19,7 @@ interface CacheData {
   knownIcons?: number[]
 }
 
-type CatalogRequest = ReturnType<typeof catalogRequest> & { icon_ids: number[] }
+type CatalogRequest = ReturnType<typeof catalogRequest>
 type ShowCatalog = (catalog: ItemCatalog) => void
 
 const frameIds = [1, 2, 3, 4, 6, 7]
@@ -221,10 +221,7 @@ export function useItemCatalog(
 ) {
   const catalog = shallowRef<ItemCatalog>()
   const state = shallowRef<'loading' | 'available' | 'unavailable' | 'idle'>('idle')
-  const request = computed(() => ({
-    ...catalogRequest(items.value),
-    icon_ids: additionalIcons?.value ?? [],
-  }))
+  const request = computed(() => catalogRequest(items.value, additionalIcons?.value))
   const key = computed(() => JSON.stringify(request.value))
   watch(
     [gameDir, key, inventoryData],

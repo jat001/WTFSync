@@ -71,8 +71,8 @@ function matches(slot: InventorySlot) {
               @click="emit('inspect', slot)"
             >
               <img
-                v-if="itemIcon(catalog, slot.item.id)"
-                :src="itemIcon(catalog, slot.item.id)"
+                v-if="itemIcon(catalog, slot.item.id, slot.item.iconTexture)"
+                :src="itemIcon(catalog, slot.item.id, slot.item.iconTexture)"
                 alt=""
                 class="absolute inset-0 size-full object-cover"
               />

@@ -18,6 +18,7 @@ export interface InventoryItem {
   link?: string
   count?: number
   quality?: number
+  iconTexture?: number
   bound?: boolean
   itemLevel?: number
   enchant?: number
@@ -103,6 +104,7 @@ function readItem(node: LuaNode | undefined): InventoryItem | undefined {
     name: name?.replace(/\|A[^|]+\|a|\|T[^|]+\|t/g, '').trim() || (id ? `物品 #${id}` : '未知物品'),
     count: asNumber(valueOf(node, 'itemCount')),
     quality: asNumber(valueOf(node, 'quality')),
+    iconTexture: asNumber(valueOf(node, 'iconTexture')),
     bound: flag(node, 'isBound'),
     itemLevel: asNumber(valueOf(node, 'itemLevel')),
     link,
