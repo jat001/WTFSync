@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { parseSavedVariables } from '../../../src/core/lua/parser'
+import { formatCopper } from '../../../src/lib/gold'
 import { readInventory } from '../../../src/profiles/syndicator/inventory'
 import { createInventoryLoader } from '../../../src/profiles/syndicator/load'
 import { MemoryFileSystem } from '../../helpers/memory-fs'
@@ -9,10 +10,11 @@ const ring =
 function snapshot(character: string) {
   return `SYNDICATOR_DATA={Characters={["${character}"]={
     details={character="${character}",realm="示例服"},
+    money=12345678,
     equipped={[12]=${ring},[13]={}},
     bags={{ {}, ${ring}, {} },[6]={{itemID=50,itemCount=3}}},
     bank={{ {}, {}, ${ring} }}
-  }},Guilds={["测试公会"]={details={visited=true},bank={
+  }},Guilds={["测试公会"]={details={visited=true},money=0,bank={
     {name="材料",isViewable=true,slots={{},${ring},{}}},
     {name="官员",isViewable=false,slots={${ring}}}
   }}}}`
@@ -25,6 +27,8 @@ describe('Syndicator inventory', () => {
       guilds: [g],
     } = readInventory(root, '_classic_titan_')
     expect(c.label).toBe('样本 · 示例服')
+    expect(formatCopper(c.money)).toBe('1,234 金 56 银 78 铜')
+    expect(formatCopper(g.money)).toBe('0 金')
     expect(c.equipped[0].slots.find((slot) => slot.index === 11)).toMatchObject({
       label: '戒指一',
       item: { name: '月石指环', enchant: 14, gems: [15], bound: false },
@@ -42,11 +46,12 @@ describe('Syndicator inventory', () => {
 
   it('reads tabbed personal banks independently of guild and warband banks', () => {
     const root = parseSavedVariables(
-      `SYNDICATOR_DATA={Characters={A={bank={},bankTabs={{name="银行分页",slots={{},${ring}}}}}},Warband={{bank={}}}}`,
+      `SYNDICATOR_DATA={Characters={A={bank={},bankTabs={{name="银行分页",slots={{},${ring}}}}}},Warband={{money=201,bank={[2]={name="战团材料",slots={[2]=${ring},[3]={}}}}}}}`,
     ).globals.get('SYNDICATOR_DATA')
     const {
       characters: [c],
       guilds,
+      warband,
     } = readInventory(root, '_retail_')
     expect(c.bank).toHaveLength(1)
     expect(c.bank[0]).toMatchObject({
@@ -55,6 +60,51 @@ describe('Syndicator inventory', () => {
     })
     expect(c.equipped).toHaveLength(0)
     expect(guilds).toHaveLength(0)
+    expect(formatCopper(c.money)).toBe('未记录')
+    expect(formatCopper(warband?.money)).toBe('2 银 1 铜')
+    expect(warband?.tabs).toMatchObject([
+      {
+        index: 2,
+        name: '战团材料',
+        slots: [{ recorded: false }, { item: { id: 30 } }, { recorded: true, item: undefined }],
+      },
+    ])
+    expect(readInventory(root, '_forever_').warband).toBeUndefined()
+  })
+
+  it('retains legacy warband tabs and shows saved balances with no recorded tabs', () => {
+    const decode = (source: string) =>
+      readInventory(parseSavedVariables(source).globals.get('SYNDICATOR_DATA'), '_retail_')
+    expect(decode(`SYNDICATOR_DATA={Warband={bank={{slots={${ring}}}}}}`).warband).toMatchObject({
+      money: undefined,
+      tabs: [{ index: 1, slots: [{ item: { id: 30 } }] }],
+    })
+    expect(decode('SYNDICATOR_DATA={Warband={{money=17}}}').warband).toEqual({
+      money: 17,
+      tabs: [],
+    })
+  })
+
+  it('caches warband data independently per account and reloads it when the save changes', async () => {
+    const fs = new MemoryFileSystem()
+    const readFile = vi.spyOn(fs, 'readFile')
+    const dir = '/wow/_retail_'
+    const a = `${dir}/WTF/Account/A/SavedVariables/Syndicator.lua`
+    const b = `${dir}/WTF/Account/B/SavedVariables/Syndicator.lua`
+    const save = (amount: number) =>
+      `SYNDICATOR_DATA={Warband={{money=${amount},bank={{slots={${ring}}}}}}}`
+    fs.setFile(a, save(101))
+    fs.setFile(b, save(202))
+    const loader = createInventoryLoader(fs)
+    const load = async () => (await loader.load(dir, ['A', 'B'])).accounts
+    const initial = await load()
+    const cached = await load()
+    expect(cached[0].warband).toBe(initial[0].warband)
+    expect(cached.map(({ warband }) => warband?.money)).toEqual([101, 202])
+    expect(readFile.mock.calls).toEqual([[a], [b]])
+    fs.setFile(a, save(303))
+    expect((await load()).map(({ warband }) => warband?.money)).toEqual([303, 202])
+    expect(readFile.mock.calls).toEqual([[a], [b], [a]])
   })
 
   it('reads only Syndicator across independent accounts and isolates malformed files', async () => {

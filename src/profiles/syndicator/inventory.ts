@@ -10,7 +10,7 @@ import { ProfileDataError } from '../../core/profile'
 import { equipmentSlots } from '../../lib/equipment-slots'
 
 export const syndicator = { sourceFiles: ['Syndicator.lua'] } as const
-export type InventoryView = 'equipped' | 'bags' | 'bank' | 'guild'
+export type InventoryView = 'equipped' | 'bags' | 'bank' | 'guild' | 'warband'
 
 export interface InventoryItem {
   id?: number
@@ -44,16 +44,21 @@ interface CharacterInventory {
   realm?: string
   name?: string
   label: string
+  money?: number
   equipped: Container[]
   bags: Container[]
   bank: Container[]
 }
 
-interface GuildInventory {
+interface BankInventory {
+  money?: number
+  tabs: Container[]
+}
+
+interface GuildInventory extends BankInventory {
   key: string
   label: string
   visited?: boolean
-  tabs: Container[]
 }
 
 export interface InventoryAccount {
@@ -61,11 +66,17 @@ export interface InventoryAccount {
   modifiedAt: number | null
   characters: CharacterInventory[]
   guilds: GuildInventory[]
+  warband?: BankInventory
 }
 
 function flag(node: LuaNode | undefined, key: string) {
   const field = valueOf(node, key)
   return field?.kind === 'boolean' ? field.value : undefined
+}
+
+function money(owner: LuaNode): number | undefined {
+  const amount = asNumber(valueOf(owner, 'money'))
+  return amount !== undefined && Number.isSafeInteger(amount) && amount >= 0 ? amount : undefined
 }
 
 function numericEntries(node: LuaNode | undefined) {
@@ -180,7 +191,20 @@ function label(key: string, owner: LuaNode, field: string) {
   return name && realm ? `${name} · ${realm}` : key
 }
 
-export function readInventory(root: LuaNode | undefined, flavor: string) {
+function readWarband(node: LuaNode | undefined): BankInventory | undefined {
+  // Older Syndicator snapshots stored the sole warband directly under Warband.
+  const bank = asTable(valueOf(node, 1)) ?? asTable(node)
+  if (!bank) return undefined
+  const pages = asTable(valueOf(bank, 'bank'))
+  const amount = money(bank)
+  if (!pages && amount === undefined) return undefined
+  return { money: amount, tabs: tabs(pages) }
+}
+
+export function readInventory(
+  root: LuaNode | undefined,
+  flavor: string,
+): Omit<InventoryAccount, 'account' | 'modifiedAt'> {
   if (!asTable(root)) throw new ProfileDataError('missing SYNDICATOR_DATA table')
   return {
     characters: owners(valueOf(root, 'Characters'), (key, character) => ({
@@ -188,6 +212,7 @@ export function readInventory(root: LuaNode | undefined, flavor: string) {
       realm: asString(valueOf(valueOf(character, 'details'), 'realm')),
       name: asString(valueOf(valueOf(character, 'details'), 'character')),
       label: label(key, character, 'character'),
+      money: money(character),
       equipped: equipment(valueOf(character, 'equipped')),
       bags: bags(character, 'bags', flavor),
       bank: bags(character, 'bank', flavor),
@@ -196,7 +221,9 @@ export function readInventory(root: LuaNode | undefined, flavor: string) {
       key,
       label: label(key, guild, 'guild'),
       visited: flag(valueOf(guild, 'details'), 'visited'),
+      money: money(guild),
       tabs: tabs(valueOf(guild, 'bank')),
     })).sort((a, b) => a.label.localeCompare(b.label, 'zh-CN')),
+    warband: flavor === '_retail_' ? readWarband(valueOf(root, 'Warband')) : undefined,
   }
 }

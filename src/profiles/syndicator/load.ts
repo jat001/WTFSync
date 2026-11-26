@@ -24,6 +24,7 @@ type AccountRecord = SourceStamp & {
   kind: 'account'
   characters: string[]
   guilds: string[]
+  warband?: InventoryAccount['warband']
 }
 type CachedRecord =
   | AccountRecord
@@ -64,7 +65,7 @@ export function createInventoryLoader(fs: FileSystem) {
       if (record?.kind !== 'guild') return undefined
       guilds.push(record.value)
     }
-    return { account, modifiedAt: info.modifiedAt, characters, guilds }
+    return { account, modifiedAt: info.modifiedAt, characters, guilds, warband: index.warband }
   }
 
   async function readAccount(dir: string, account: string): Promise<InventoryAccount> {
@@ -118,7 +119,7 @@ export function createInventoryLoader(fs: FileSystem) {
           store(id, { kind: 'guild', value })
           return id
         })
-        store(key, { kind: 'account', ...stamp, characters, guilds })
+        store(key, { kind: 'account', ...stamp, characters, guilds, warband: result.warband })
       }
       return result
     } finally {
