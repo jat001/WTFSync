@@ -2,6 +2,7 @@
 import type { TableColumn } from '@nuxt/ui'
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 
+import AppSelect from '../components/AppSelect.vue'
 import BiaoGeCharacterDetails from '../components/BiaoGeCharacterDetails.vue'
 import { useGameDirectoryPicker } from '../composables/useGameDirectoryPicker'
 import { useSettings } from '../composables/useSettings'
@@ -257,13 +258,11 @@ async function confirmDelete() {
         </p>
       </div>
       <div v-if="gameDir" class="flex items-center gap-2">
-        <USelect
+        <AppSelect
           v-if="flavorItems.length > 1"
           v-model="settings.flavor"
           :items="flavorItems"
           aria-label="游戏版本"
-          size="sm"
-          class="game-version-select"
         />
         <UButton
           label="重新读取"
@@ -339,19 +338,17 @@ async function confirmDelete() {
               size="sm"
               class="min-w-32 flex-1"
             />
-            <USelect
+            <AppSelect
               v-if="realmItems.length > 2"
               v-model="realmFilter"
               :items="realmItems"
               aria-label="筛选服务器"
-              size="sm"
             />
-            <USelect
+            <AppSelect
               v-if="accountItems.length > 2"
               v-model="accountFilter"
               :items="accountItems"
               aria-label="筛选账号"
-              size="sm"
             />
           </div>
           <UTable

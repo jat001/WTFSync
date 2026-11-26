@@ -2,6 +2,7 @@
 import { computed, shallowRef } from 'vue'
 
 import AccountRow from '../components/AccountRow.vue'
+import AppSelect from '../components/AppSelect.vue'
 import { useGameDirectoryPicker } from '../composables/useGameDirectoryPicker'
 import { useModal } from '../composables/useModal'
 import { useSettings } from '../composables/useSettings'
@@ -187,14 +188,7 @@ async function openOutputDir() {
         </p>
       </div>
       <div v-if="gameDir" class="flex shrink-0 items-center gap-2">
-        <USelect
-          v-model="settings.flavor"
-          :items="flavorItems"
-          value-key="value"
-          size="sm"
-          class="game-version-select"
-          aria-label="游戏版本"
-        />
+        <AppSelect v-model="settings.flavor" :items="flavorItems" aria-label="游戏版本" />
         <UButton
           icon="i-lucide-refresh-cw"
           label="立即同步"

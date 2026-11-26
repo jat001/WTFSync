@@ -2,6 +2,7 @@
 import type { TableColumn } from '@nuxt/ui'
 import { computed, ref, watch } from 'vue'
 
+import AppSelect from '../components/AppSelect.vue'
 import BiaoGeBillDetails from '../components/BiaoGeBillDetails.vue'
 import { useBiaoGeBills } from '../composables/useBiaoGeBills'
 import { useGameDirectoryPicker } from '../composables/useGameDirectoryPicker'
@@ -134,13 +135,11 @@ async function saveSelectedBill() {
     <div class="flex flex-wrap items-start justify-between gap-3">
       <h1 class="text-base font-semibold text-highlighted">金团账单</h1>
       <div v-if="gameDir" class="flex items-center gap-2">
-        <USelect
+        <AppSelect
           v-if="flavorItems.length > 1"
           v-model="settings.flavor"
           :items="flavorItems"
           aria-label="游戏版本"
-          size="sm"
-          class="game-version-select"
         />
         <UButton
           label="重新读取"
@@ -209,19 +208,17 @@ async function saveSelectedBill() {
             size="sm"
             class="min-w-40 flex-1"
           />
-          <USelect
+          <AppSelect
             v-if="hasHistory"
             v-model="kindFilter"
             :items="kindItems"
             aria-label="账单类型"
-            size="sm"
           />
-          <USelect
+          <AppSelect
             v-if="accountItems.length > 2"
             v-model="accountFilter"
             :items="accountItems"
             aria-label="筛选账号"
-            size="sm"
           />
         </div>
         <UTable

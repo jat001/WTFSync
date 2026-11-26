@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+import AppSelect from '../components/AppSelect.vue'
 import { useGameDirectoryPicker } from '../composables/useGameDirectoryPicker'
-import { useSettings } from '../composables/useSettings'
+import { useSettings, type ThemeMode } from '../composables/useSettings'
 import { useSync } from '../composables/useSync'
 import { openDirectory } from '../lib/open'
 import { isTauri } from '../lib/tauri'
@@ -31,7 +32,7 @@ const themeOptions = [
   { label: '跟随系统', value: 'system' },
   { label: '浅色', value: 'light' },
   { label: '深色', value: 'dark' },
-]
+] satisfies { label: string; value: ThemeMode }[]
 
 const flavorItems = computed(() => gameVersionItems(flavors.value, true))
 
@@ -109,13 +110,7 @@ function onReset() {
             <p class="text-sm font-medium text-highlighted">外观</p>
             <p class="mt-0.5 text-xs text-muted">界面使用的颜色主题</p>
           </div>
-          <USelect
-            v-model="settings.theme"
-            :items="themeOptions"
-            value-key="value"
-            size="sm"
-            class="w-36"
-          />
+          <AppSelect v-model="settings.theme" :items="themeOptions" aria-label="外观" />
         </div>
         <div class="flex items-start justify-between gap-6 px-5 py-4">
           <div>
@@ -169,14 +164,12 @@ function onReset() {
             <p class="text-sm font-medium text-highlighted">游戏版本</p>
             <p class="mt-0.5 text-xs text-muted">每个版本分别保存账号选择</p>
           </div>
-          <USelect
+          <AppSelect
             v-model="settings.flavor"
             :items="flavorItems"
-            value-key="value"
+            aria-label="游戏版本"
             placeholder="请先选择目录"
             :disabled="flavorItems.length === 0"
-            size="sm"
-            class="game-version-select"
           />
         </div>
       </div>

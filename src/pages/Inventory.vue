@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import AppSelect from '../components/AppSelect.vue'
 import EquipmentOverview from '../components/EquipmentOverview.vue'
 import InventoryContainer from '../components/InventoryContainer.vue'
 import LocalItemDetails from '../components/LocalItemDetails.vue'
@@ -124,13 +125,11 @@ function inspect(box: Container, slot: InventorySlot) {
     <header class="flex flex-wrap items-center justify-between gap-3">
       <h1 class="text-base font-semibold text-highlighted">离线库存</h1>
       <div v-if="gameDir" class="flex items-center gap-2">
-        <USelect
+        <AppSelect
           v-if="flavorItems.length > 1"
           v-model="settings.flavor"
           :items="flavorItems"
           aria-label="游戏版本"
-          size="sm"
-          class="game-version-select"
         />
         <UButton
           label="重新读取"
@@ -192,17 +191,23 @@ function inspect(box: Container, slot: InventorySlot) {
       />
       <template v-if="account">
         <div class="flex flex-wrap items-end gap-3">
-          <UFormField label="来源账号"
-            ><USelect v-model="accountId" :items="accountOptions" aria-label="来源账号" size="sm"
-          /></UFormField>
-          <UFormField v-if="view === 'guild' && guildOptions.length" label="公会"
-            ><USelect v-model="guildId" :items="guildOptions" aria-label="公会" size="sm"
-          /></UFormField>
+          <UFormField label="来源账号" class="max-w-full">
+            <AppSelect v-model="accountId" :items="accountOptions" aria-label="来源账号" />
+          </UFormField>
+          <UFormField
+            v-if="view === 'guild' && guildOptions.length"
+            label="公会"
+            class="max-w-full"
+          >
+            <AppSelect v-model="guildId" :items="guildOptions" aria-label="公会" />
+          </UFormField>
           <UFormField
             v-if="view !== 'guild' && view !== 'warband' && characterOptions.length"
             label="角色"
-            ><USelect v-model="characterId" :items="characterOptions" aria-label="角色" size="sm"
-          /></UFormField>
+            class="max-w-full"
+          >
+            <AppSelect v-model="characterId" :items="characterOptions" aria-label="角色" />
+          </UFormField>
           <span v-if="account.modifiedAt" class="pb-1 text-xs text-muted"
             >存档更新于 {{ formatTime(account.modifiedAt) }}</span
           >
