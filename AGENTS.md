@@ -14,8 +14,6 @@
 
 - 会修改仓库以外文件的命令，包括写入真实游戏存档、插件目录或系统证书库。
 - 会更改提交、暂存区或工作区的 Git 命令，例如 `git add`、`git commit`、`git checkout`、`git reset`、`git pull`，以及向远端写入的 `git push`。
-- 会写入被忽略文件的命令。依赖安装会写入 `node_modules/`，前端构建会生成 `dist/` 和类型声明，Tauri 图标和 Rust 构建产物分别位于 `src-tauri/icons/` 和 `src-tauri/target/`，示例生成和 MSIX 打包会写入 `artifacts/`。
-- 会更新锁文件的包管理命令，包括可能改动 `pnpm-lock.yaml` 的 `pnpm install`、`pnpm add`、`pnpm remove`、`pnpm update`，以及可能改动 `src-tauri/Cargo.lock` 的 `cargo add`、`cargo remove`、`cargo update`。`pnpm install --frozen-lockfile` 仍需遵守上述写入规则。
 
 ## 按改动定位代码
 
