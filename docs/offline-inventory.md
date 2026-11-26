@@ -26,11 +26,19 @@ Windows Tauri 命令 `inventory_catalog` 校验游戏目录的文件系统授权
 | 部件                | 接入方式                                                        |
 | ------------------- | --------------------------------------------------------------- |
 | CASC                | 固定版本的 CascLib Git 子模块，通过 CMake 编译 DLL              |
-| DB2 表定义与文件 ID | 固定版本的 WoWDBDefs Git 子模块，将用到的定义与清单嵌入辅助程序 |
+| DB2 表定义与文件 ID | 将用到的 WoWDBDefs 定义与清单嵌入辅助程序，未知布局按需更新定义 |
 | DB2 与热修解析      | WoWSims Forever `v1.0.3` 的 `db2tool` Go 模块                   |
 | BLP 解码            | Rust `wow-blp` `0.7.0`                                          |
 
 本项目维护读取流程和请求协议，上游解析器通过固定的子模块或模块版本接入。Go 辅助程序直接读取所需的 DB2 记录。MSIX 同时打包辅助程序、CascLib DLL 和许可证。 [上游来源与许可证](../tools/clientdata/THIRD-PARTY.md) · [Windows 打包说明](../packaging/windows/README.md)
+
+### DB2 布局与定义更新
+
+读取器按当前客户端的 CASC 索引打开 DB2，核对表名对应的表哈希和 WDC5 表头里的布局哈希。若构建号已登记且布局一致，使用对应定义。否则在同名表的定义中按布局哈希匹配。游戏只更新数据时，内置定义可以继续离线使用。解码和简中热修仍使用当前构建号。
+
+内置定义里找不到布局时，先查 WTFSync 应用缓存目录下的 `dbd`，仍未命中才从 WoWDBDefs 的 GitHub 仓库请求同名 `.dbd` 文件。请求只包含公开表名。下载文件通过定义校验、布局匹配和实际解码后才保存，每张表保留一份，单个文件上限 256 KiB。一次辅助程序调用共用 5 秒的下载时限。上游尚未提供对应布局或网络不可用时，受影响的物品资料仍按原有逻辑回退到 Syndicator。游戏数据、热修、CASC 索引和图像继续从本机读取。 [定义选择与缓存](../tools/clientdata/schema_windows.go) · [WoWDBDefs](https://github.com/wowdev/WoWDBDefs)
+
+### 物品字段
 
 DB2 查询包括基础装等、属性、护甲、耐久上限、装备效果、套装门槛、插槽和宝石条件。附魔效果行来自 `SpellItemEnchantment`，原始名称和描述通过实际施加该附魔的法术关联到 `SpellName` 和 `Spell`。套装、附魔及装备效果还依赖相关的法术效果、时长和部分描述中的法术引用。客户端数据或同构建热修缺失时，页面仍可使用 Syndicator 已保存的资料，并标记客户端资料可能不完整。 [Go 读取器](../tools/clientdata/main_windows.go) · [Tauri 命令及解码](../src-tauri/src/clientdata.rs)
 
@@ -101,6 +109,7 @@ FileDataID 表示 CASC 中的资源标识，具体文件内容由该构建的根
 ## 验证入口
 
 - 前端测试覆盖账号与角色恢复、同名角色按服务器隔离、存档缓存命中与失效、图像共享及淘汰、热修失效、跨查询只补缺少的物品，以及套装、宝石和附魔重新组装后的提示一致性。
+- 在 Windows 的 `tools/clientdata/` 执行 `go test -mod=readonly ./...` 可核对已知布局离线读取、未知布局按需获取、定义缓存命中，以及拒绝不匹配或过大的定义。
 - 在 `src-tauri/` 执行 `cargo test --locked` 可核对转码行为。不透明图标输出 JPEG，透明图标输出 PNG 并保留 alpha。
 - 验证本地辅助程序协议时，先查询有图标的物品，再通过 `known_icons` 带上第一次返回的图标 ID 重复查询。两次的物品表应相同，第二次的图标表应为空。将 `items` 和 `enchants` 留空，并在 `icon_ids` 中传入一个存在的图标 ID 时，应得到一张图和空物品表。泰坦重铸和正式服均可用于此验证。
 

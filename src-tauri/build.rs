@@ -56,6 +56,7 @@ fn build_client_data(manifest: &Path) {
         root.join("casc_windows.go"),
         root.join("item_details_windows.go"),
         root.join("main_windows.go"),
+        root.join("schema_windows.go"),
         casc.join("CMakeLists.txt"),
         casc.join("src"),
         definitions.join("manifest.json"),

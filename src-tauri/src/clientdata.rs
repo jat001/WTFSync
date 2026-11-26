@@ -24,9 +24,12 @@ mod windows {
         let resource = app.path().resource_dir().map_err(|err| err.to_string())?;
         let dll = resource.join("CascLib.dll");
         let input = serde_json::to_vec(&request).map_err(|err| err.to_string())?;
-        let mut child = Command::new(executable)
-            .arg(dir)
-            .arg(dll)
+        let mut command = Command::new(executable);
+        command.arg(dir).arg(dll);
+        if let Ok(cache) = app.path().app_cache_dir() {
+            command.arg(cache.join("dbd"));
+        }
+        let mut child = command
             .creation_flags(0x08000000) // CREATE_NO_WINDOW
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())

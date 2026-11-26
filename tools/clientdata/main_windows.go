@@ -1,8 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"embed"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/wowsims/forever/tools/db2tool/dbd"
 	"github.com/wowsims/forever/tools/db2tool/tact"
 	"github.com/wowsims/forever/tools/db2tool/wdc"
 )
@@ -32,6 +31,12 @@ var definitions embed.FS
 type row map[string]any
 type rows map[int32]row
 type idSet map[int32]bool
+
+type tableFile struct {
+	Name       string `json:"tableName"`
+	FileDataID uint32 `json:"db2FileDataID"`
+	Hash       string `json:"tableHash"`
+}
 
 type request struct {
 	Items             []int32
@@ -63,7 +68,8 @@ type dataset struct {
 	fallbackProducts []string
 	product          string
 	build            uint32
-	ids              map[string]uint32
+	files            map[string]tableFile
+	schemas          schemaStore
 	hotfix           *wdc.HotfixReader
 	decoded          result
 }
@@ -95,7 +101,8 @@ func idsFrom(records rows, column string) idSet {
 }
 
 func (d *dataset) scan(name string, visit func(int32, func(string) any)) error {
-	raw, err := d.storage.read(d.ids[name], 96<<20, fillEncrypted)
+	file := d.files[name]
+	raw, err := d.storage.read(file.FileDataID, 96<<20, fillEncrypted)
 	if err != nil {
 		return err
 	}
@@ -117,29 +124,31 @@ func (d *dataset) scan(name string, visit func(int32, func(string) any)) error {
 	if err != nil {
 		return err
 	}
-	schema, err := definitions.ReadFile("definitions/definitions/" + name + ".dbd")
+	if fmt.Sprintf("%08X", table.TableHash) != file.Hash {
+		return fmt.Errorf("%s: unexpected DB2 table hash %08X", name, table.TableHash)
+	}
+	// WDC5 stores the layout hash after its 136-byte prefix and five header fields.
+	// ReadFile above validates the signature and full header before this access.
+	const layoutHashOffset = 156
+	hash := fmt.Sprintf("%08X", binary.LittleEndian.Uint32(raw[layoutHashOffset:]))
+	schema, err := d.schemas.resolve(name, hash, d.build)
 	if err != nil {
 		return err
 	}
-	def, err := dbd.Read(bytes.NewReader(schema), true)
-	if err != nil {
-		return err
-	}
-	layout, err := dbd.SelectVersion(def, d.build)
-	if err != nil {
-		return err
-	}
-	decoded, err := table.DecodeRows(def, layout, d.build)
+	decoded, err := table.DecodeRows(schema.definition, schema.layout, d.build)
 	if err != nil {
 		return err
 	}
 	if d.hotfix != nil {
-		if _, _, err := d.hotfix.ApplyHotfixes(table, def, layout, d.build, decoded); err != nil {
+		if _, _, err := d.hotfix.ApplyHotfixes(table, schema.definition, schema.layout, d.build, decoded); err != nil {
 			return err
 		}
 	}
+	if schema.downloaded != nil {
+		d.schemas.save(name, schema.downloaded)
+	}
 	columns := map[string]int{}
-	for index, col := range layout.Definitions {
+	for index, col := range schema.layout.Definitions {
 		columns[col.Name] = index
 	}
 	for _, entry := range decoded.Rows {
@@ -470,8 +479,15 @@ func (d *dataset) loadImages(ids idSet, req request) {
 }
 
 func run() error {
-	if len(os.Args) != 3 {
-		return fmt.Errorf("expected game directory and CascLib path")
+	if len(os.Args) < 3 || len(os.Args) > 4 {
+		return fmt.Errorf("expected game directory, CascLib path, and optional definition cache path")
+	}
+	schemas := schemaStore{}
+	if len(os.Args) == 4 {
+		schemas.cacheDir = os.Args[3]
+		if !filepath.IsAbs(schemas.cacheDir) {
+			return fmt.Errorf("definition cache path must be absolute")
+		}
 	}
 	var req request
 	if err := json.NewDecoder(io.LimitReader(os.Stdin, 1<<20)).Decode(&req); err != nil {
@@ -509,10 +525,7 @@ func run() error {
 		return err
 	}
 	defer storage.close()
-	var manifest []struct {
-		TableName  string
-		FileDataID uint32 `json:"db2FileDataID"`
-	}
+	var manifest []tableFile
 	raw, err := definitions.ReadFile("definitions/manifest.json")
 	if err != nil {
 		return err
@@ -520,11 +533,12 @@ func run() error {
 	if err := json.Unmarshal(raw, &manifest); err != nil {
 		return err
 	}
-	ids := map[string]uint32{}
+	files := map[string]tableFile{}
 	for _, record := range manifest {
-		ids[record.TableName] = record.FileDataID
+		files[record.Name] = record
 	}
-	d := dataset{storage: storage, product: product, build: build, ids: ids, decoded: result{Tables: map[string]rows{}, Icons: map[int32][]byte{}}}
+	d := dataset{storage: storage, product: product, build: build, files: files, schemas: schemas, decoded: result{Tables: map[string]rows{}, Icons: map[int32][]byte{}}}
+	defer d.schemas.close()
 	for _, entry := range entries {
 		if entry.Product != product && validProduct.MatchString(entry.Product) && !slices.Contains(d.fallbackProducts, entry.Product) {
 			d.fallbackProducts = append(d.fallbackProducts, entry.Product)
